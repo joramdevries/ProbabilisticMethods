@@ -15,6 +15,7 @@ import sklearn
 import sklearn.neural_network
 import os
 
+
 cur = os.getcwd()
 
 #%% IMPORTING DATA
@@ -86,36 +87,7 @@ plt.show()
 
 # %% POLYNOMIAL MODEL
 
-from __future__ import print_function, division
-import numpy as np
-from scipy import linalg
-from smt.utils.misc import compute_rms_error
 
-from smt.problems import Sphere, NdimRobotArm, Rosenbrock
-from smt.sampling_methods import LHS
-from smt.surrogate_models import LS, QP, KPLS, KRG, KPLSK, GEKPLS, MGP
-
-#to ignore warning messages
-import warnings
-warnings.filterwarnings("ignore")
-
-try:
-    from smt.surrogate_models import IDW, RBF, RMTC, RMTB
-    compiled_available = True
-except:
-    compiled_available = False
-
-try:
-    import matplotlib.pyplot as plt
-    plot_status = True
-except:
-    plot_status = False
-
-import scipy.interpolate
-
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
-from matplotlib import cm
 
 # Building a design matrix for a polynomial of 3rd order
 def DesignMatrixO3(X):
