@@ -13,6 +13,9 @@ import scipy
 import matplotlib.pyplot as plt
 import sklearn
 import sklearn.neural_network
+import os
+
+cur = os.getcwd()
 
 #%% IMPORTING DATA
 
@@ -47,6 +50,7 @@ for i in range(DependentVariableNames.shape[0]):
     plt.xlabel('Mean wind speed [m/s]')
     #plt.ylabel(DependentVariableNames[i])
 plt.tight_layout()
+plt.savefig(cur + '\\res\\Surrogate_model_U.eps')
 plt.show()
 
 
@@ -61,6 +65,7 @@ for i in range(DependentVariableNames.shape[0]):
     plt.xlabel('Wind standard deviation [m/s]')
     #plt.ylabel(DependentVariableNames[i])
 plt.tight_layout()
+plt.savefig(cur + '\\res\\Surrogate_model_sigma.eps')
 plt.show()
 
 
@@ -75,6 +80,7 @@ for i in range(DependentVariableNames.shape[0]):
     plt.xlabel('Wind shear exponent [-]')
     #plt.ylabel(DependentVariableNames[i])
 plt.tight_layout()
+plt.savefig(cur + '\\res\\Surrogate_model_shear.eps')
 plt.show()
 
 
@@ -185,7 +191,8 @@ for i in range(DependentVariableNames.shape[0]):
     axs2a[1].plot(np.array([np.min(AllTargetData[DependentVariableNames[i]]), np.max(AllTargetData[DependentVariableNames[i]])]),\
                  np.array([np.min(AllTargetData[DependentVariableNames[i]]), np.max(AllTargetData[DependentVariableNames[i]])]),'-y',linewidth = 4)
     axs2a[1].legend(['Point-to-point comparisons','1:1 relation'])
-    plt.tight_layout()             
+    plt.tight_layout()  
+    plt.savefig(cur + '\\res\\Surrogate_model_U_2.eps')           
     plt.show()
     
     
@@ -221,7 +228,8 @@ for i in range(DependentVariableNames.shape[0]):
     axs2a[1].plot(np.array([np.min(AllTargetData[DependentVariableNames[i]]), np.max(AllTargetData[DependentVariableNames[i]])]),\
                  np.array([np.min(AllTargetData[DependentVariableNames[i]]), np.max(AllTargetData[DependentVariableNames[i]])]),'-g',linewidth = 4)
     axs2a[1].legend(['Point-to-point comparisons','1:1 relation'])
-    plt.tight_layout()             
+    plt.tight_layout()  
+    plt.savefig(cur + '\\res\\Surrogate_model_sigma_2.eps')           
     plt.show()
     
 #%% PLOTTING SHEAR
@@ -256,5 +264,6 @@ for i in range(DependentVariableNames.shape[0]):
     axs2a[1].plot(np.array([np.min(AllTargetData[DependentVariableNames[i]]), np.max(AllTargetData[DependentVariableNames[i]])]),\
                  np.array([np.min(AllTargetData[DependentVariableNames[i]]), np.max(AllTargetData[DependentVariableNames[i]])]),'-r', linewidth = 4)
     axs2a[1].legend(['Point-to-point comparisons','1:1 relation'])
-    plt.tight_layout()             
+    plt.tight_layout() 
+    plt.savefig(cur + '\\res\\Surrogate_model_shear_2.eps')            
     plt.show()

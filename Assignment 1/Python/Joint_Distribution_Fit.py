@@ -13,6 +13,9 @@ import matplotlib.pyplot as plt
 import sklearn
 import sklearn.neural_network
 import seaborn as sns
+import os
+
+cur = os.getcwd()
 
 #%% PLOT SELECTION
 
@@ -98,6 +101,7 @@ if mean_sigma_plot:
     plt.xlabel('Wsp')
     plt.ylabel('SigmaU')
     plt.title('Scatter plot of Wsp vs. SigmaU')
+    plt.savefig(cur + '\\res\\Scatter_plot_Wsp_vs_SigmaU.eps')
     plt.show()
     
     # Scatter plot of Wsp and SigmaU -- HEX
@@ -106,6 +110,7 @@ if mean_sigma_plot:
     plt.xlabel('Wind Speed [m/s]', fontsize=14)
     plt.ylabel('Std. Dev(U)', fontsize=14)
     plt.suptitle('Joint Plot of Wsp vs. SigmaU', fontsize=16, y=0.85)
+    plt.savefig(cur + '\\res\\Joint_plot_Wsp_vs_SigmaU.eps')
     plt.show()
     
     # Scatter plot of Wsp and SigmaU -- Scatter + KDE
@@ -114,6 +119,7 @@ if mean_sigma_plot:
     plt.xlabel('Wind Speed [m/s]', fontsize=14)
     plt.ylabel('Std. Dev(U)', fontsize=14)
     plt.suptitle('Joint Plot of Wsp vs. SigmaU', fontsize=16, y=0.80)
+    plt.savefig(cur + '\\res\\Joint_plot_2_Wsp_vs_SigmaU.eps')
     plt.show()
     
     
@@ -156,7 +162,7 @@ if binned_plot:
         
     plt.plot(WspBinCenters, MuSigmaBinned, "-ok")
     plt.plot(WspBinCenters, SigmaSigmaBinned, "-xb") # for turbulence this is a common assumption
-    
+    plt.savefig(cur + '\\res\\binned_plot_Wsp_vs_Sigma.eps')
 
     Mudatax = WspBinCenters[~np.isnan(MuSigmaBinned)]
     Mudatay = MuSigmaBinned[~np.isnan(MuSigmaBinned)]
@@ -167,7 +173,7 @@ if binned_plot:
     plt.plot(WspBinCenters, MuSigmaBinned, "-ok")
     plt.plot(WspBinCenters, SigmaSigmaBinned, "-xb") # for turbulence this is a common assumption
     plt.plot(WspBinCenters, (pMu[0]*WspBinCenters**2 + pMu[1]*WspBinCenters + pMu[2]), '-r')
-    
+    plt.savefig(cur + '\\res\\bin_center_plot.eps')
     
     SigmaSigmaRef = np.mean(SigmaSigmaBinned)
     
@@ -176,7 +182,7 @@ if binned_plot:
     plt.plot(WspBinCenters, SigmaSigmaBinned, "-xb") # for turbulence this is a common assumption
     plt.plot(WspBinCenters, (pMu[0]*WspBinCenters**2 + pMu[1]*WspBinCenters + pMu[2]), '-r')
     plt.plot(WspBinCenters, np.ones(WspBinCenters.shape)*SigmaSigmaRef, '-g')# just a constant
-    
+    plt.savefig(cur + '\\res\\bin_center_plot_2.eps')
 # %% PLOTTING CONDITION DISTRIBUTION OF TURBULENCE 
 
 if turbulence_plot:   
@@ -222,7 +228,7 @@ if turbulence_plot:
     plt.plot(WspBinCenters, SigmaSigmaBinned, "-xb") # for turbulence this is a common assumption
     plt.plot(WspBinCenters, MuSigmaFunc(WspBinCenters), '-r')
     plt.plot(WspBinCenters, SigmaSigmaFunc(WspBinCenters), '-g')# just a constant
-
+    plt.savefig(cur + '\\res\\turb_plot.eps')
 
 if monte_carlo_plot:
     NMC = 10000
@@ -236,6 +242,7 @@ if monte_carlo_plot:
     MuSigmaU = MuSigmaFunc(Urand)
     
     plt.plot(Urand, MuSigmaU, "xk")
+    plt.savefig(cur + '\\res\\monte_carlo_plot.eps')
     plt.show()
     
     # new thing will create straight line
@@ -243,6 +250,7 @@ if monte_carlo_plot:
     SigmaSigmaU = SigmaSigmaFunc(Urand)
     
     plt.plot(Urand, SigmaSigmaU, "xk")
+    plt.savefig(cur + '\\res\\monte_carlo_2_plot.eps')
     plt.show()
     
     # use functions all the way above
@@ -252,6 +260,7 @@ if monte_carlo_plot:
     
     
     plt.plot(Urand, SigmaUrand, "xk")
+    plt.savefig(cur + '\\res\\monte_carlo_3_plot.eps')
     plt.show()
     
     # PLOT TURBULENCE INCLUDING DISTRIBUTION PARAMETERS
@@ -266,4 +275,5 @@ if monte_carlo_plot:
     ax[1].plot(Urand,SigmaUrand,'*b')
     ax[1].set_xlim([0,40])
     ax[1].set_ylim([0,7])
+    plt.savefig(cur + '\\res\\turbulence_plot.eps')
     plt.show()

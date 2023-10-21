@@ -14,6 +14,9 @@ import scipy
 import matplotlib.pyplot as plt
 import sklearn
 import sklearn.neural_network
+import os
+
+cur = os.getcwd()
 
 from datetime import datetime
 
@@ -168,6 +171,7 @@ ax0.set_xlim([0.5,3.5])
 ax0.set_xticks([1,2,3])
 ax0.set_xticklabels(['Normal dist.','Bootstrapping'])
 ax0.set_ylabel('Annual mean wind speed [m/s]')
+plt.savefig(cur + '\\res\\Normal_vs_Bootstrap.eps')
 plt.show()
 
 # Plot pdfs
@@ -189,6 +193,7 @@ p12 = ax1.plot(Ubins,pdf_B,'-b', label = 'Bootstrapping')
 plt.xlabel('Annual mean wind speed [m/s]')
 plt.ylabel('Probability density')
 plt.legend()
+plt.savefig(cur + '\\res\\Normal_vs_Bootstrap_Probability_Density.eps')
 
 plt.show()
 
