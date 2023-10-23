@@ -24,7 +24,9 @@ from datetime import datetime
 
 WindData = pd.read_csv('HovsoreData_Sonic_100m_2004-2013.csv')
 
+WindData['Timestamp'] = pd.to_datetime(WindData['Timestamp'], format='%Y%m%d%H%M')
 
+WindData['Year'] = WindData['Timestamp'].dt.year
 
 # %% BOOTSTRAP
 alpha =  1 - 0.95# Corresponding to 95% probability  ( alpha = 1-p)
@@ -36,7 +38,7 @@ start_time = now.strftime("%H:%M:%S")
 
 print("Start of bootstrap: ", start_time)
 
-Nbootstrap = 5 #99999  # How many times you wanna do this random act
+Nbootstrap = 10 #99999  # How many times you wanna do this random act
 #BootstrapSize = len(U)
 #BootstrapMeans = np.mean(U)
 
@@ -69,30 +71,34 @@ print("Umean = ", Umean)
 print("Ustd = ", Ustd)
 print("n = ", n)
 
+BootstrapSize = N1year
 
+# now select the year in which we do the bootstrapping
+BootstrapSample = np.zeros((Nbootstrap,BootstrapSize))
+
+years = ["2004","2005","2006","2007","2008","2009","2010","2011","2012","2013"]
 print("========================================================")
 print("Starting Bootstrap...")
-for i in range(Nbootstrap):
+i=0
+for y in years:
     
-    print("i = ", i)
+    print("y = ", y)
     
     #for i in range(N1year): # you take the range of this 1 year
         
     # here you take a random sample and then use that sample to locate the next year
-    Yearsample = np.random.randint(low = 0, high = len(WindData) - N1year) #, size = (Nbootstrap,BootstrapSize))
+    #Yearsample = np.random.randint(low = 0, high = len(WindData) - N1year) #, size = (Nbootstrap,BootstrapSize))
 
-    print("Yearsample = ", Yearsample)
+    #print("Yearsample = ", Yearsample)
 
-    Winddata_1_year = WindData[Yearsample:Yearsample + N1year]
-    #print("Winddata_1_year = ", Winddata_1_year)
+    #Winddata_1_year = WindData[Yearsample:Yearsample + N1year]
+    Winddata_1_year = WindData[WindData['Year'] == int(y)]
+    print("Winddata_1_year = ", Winddata_1_year)
 
     #Bsample = np.random.randint(low = 0, high = 8, size = (Nbootstrap,BootstrapSize))
     #Bsample = np.random.randint(low = 0, high = len(WindData) - N1year)
 
-    BootstrapSize = len(Winddata_1_year)
-
-    # now select the year in which we do the bootstrapping
-    BootstrapSample = np.zeros((Nbootstrap,BootstrapSize))
+    
 
     # now do bootstrapping over the chosen year
     #for j in range(Nbootstrap):
@@ -115,15 +121,21 @@ for i in range(Nbootstrap):
             #print("Wrong sample, i = ",i,", j = ", j)
             Bsample = np.random.randint(low=Winddata_1_year['Timestamp'].idxmin(), high=Winddata_1_year['Timestamp'].idxmax())
         
-        ##print("Bsample =", Bsample)
+        #print("Bsample =", Bsample)
+        
+        sample = Winddata_1_year.loc[Bsample, 'Wsp']
+        s = np.random.normal(sample, sample*0.01, 1000)
+        
+        Bsample_final = np.random.choice(s)
         
         #print("Winddata_1_year = ", Winddata_1_year)
         #print(Winddata_1_year['Wsp', index = Bsample])
         #print(Winddata_1_year)
         #print(Winddata_1_year[Winddata_1_year['Timestamp'].idxmax()])
         ##print("Winddata_1_year.loc[Bsample, 'Wsp'] = ", Winddata_1_year.loc[Bsample, 'Wsp'])
-        BootstrapSample[i,j] = Winddata_1_year.loc[Bsample, 'Wsp'] #Winddata_1_year['Wsp', index = Bsample]
-
+        BootstrapSample[i,j] = Bsample_final #Winddata_1_year.loc[Bsample, 'Wsp'] #Winddata_1_year['Wsp', index = Bsample]
+        #print("BootstrapSample =", BootstrapSample)
+    i += 1
 print("DONE!!")
 # repeat this process
 
@@ -137,16 +149,16 @@ BootstrapMeans = np.sort(BootstrapMeans)
 #print(Nbootstrap)
 #print(alpha)
 #print(int((Nbootstrap+1) * (alpha/2) ))
-#Rlow = int((Nbootstrap+1) * (alpha/2) )
+Rlow = int((Nbootstrap+1) * (alpha/2) )
 #print(Rlow)
-#Rhigh = int((Nbootstrap+1) * ((1-alpha)/2))
+Rhigh = int((Nbootstrap+1) * ((1-alpha)/2))
 #print(Rhigh)
 
-#CIn_B = BootstrapMeans[Rlow]
-#CIp_B = BootstrapMeans[Rhigh]
+CIn_B = BootstrapMeans[Rlow]
+CIp_B = BootstrapMeans[Rhigh]
 
-CIn_B = BootstrapMeans.min()
-CIp_B = BootstrapMeans.max()
+#CIn_B = BootstrapMeans.min()
+#CIp_B = BootstrapMeans.max()
 
 print('Confidence interval based on bootstrapping: [' + str(CIn_B) + ', ' + str(CIp_B) + ']')
 
