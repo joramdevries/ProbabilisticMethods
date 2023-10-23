@@ -24,6 +24,24 @@ from datetime import datetime
 
 WindData = pd.read_csv('HovsoreData_Sonic_100m_2004-2013.csv')
 
+
+
+# %% BOOTSTRAP
+alpha =  1 - 0.95# Corresponding to 95% probability  ( alpha = 1-p)
+
+
+now = datetime.now()
+
+start_time = now.strftime("%H:%M:%S")
+
+print("Start of bootstrap: ", start_time)
+
+Nbootstrap = 5 #99999  # How many times you wanna do this random act
+#BootstrapSize = len(U)
+#BootstrapMeans = np.mean(U)
+
+N1year = int(1*365*24*6) # taking an interval for 1 year with 365 days with 24 hours with 6 times 10 minute intervals
+
 # Filter rows where 'Wsp' is less than or equal to 35 m/s
 filtered_WindData = WindData[WindData['Wsp'] <= 35]
 
@@ -51,50 +69,37 @@ print("Umean = ", Umean)
 print("Ustd = ", Ustd)
 print("n = ", n)
 
-# %% BOOTSTRAP
-alpha =  1 - 0.95# Corresponding to 95% probability  ( alpha = 1-p)
 
-
-now = datetime.now()
-
-start_time = now.strftime("%H:%M:%S")
-
-print("Start of bootstrap: ", start_time)
-
-Nbootstrap = 100 #99999  # How many times you wanna do this random act
-#BootstrapSize = len(U)
-#BootstrapMeans = np.mean(U)
-
-N1year = int(1*365*24*6) # taking an interval for 1 year with 365 days with 24 hours with 6 times 10 minute intervals
-
-
-#for i in range(N1year): # you take the range of this 1 year
-    
-# here you take a random sample and then use that sample to locate the next year
-Yearsample = np.random.randint(low = 0, high = len(WindData) - N1year) #, size = (Nbootstrap,BootstrapSize))
-
-print("Yearsample = ", Yearsample)
-
-Winddata_1_year = WindData[Yearsample:Yearsample + N1year]
-print("Winddata_1_year = ", Winddata_1_year)
-
-#Bsample = np.random.randint(low = 0, high = 8, size = (Nbootstrap,BootstrapSize))
-#Bsample = np.random.randint(low = 0, high = len(WindData) - N1year)
-
-BootstrapSize = len(Winddata_1_year)
-
-# now select the year in which we do the bootstrapping
-BootstrapSample = np.zeros((Nbootstrap,BootstrapSize))
-
-# now do bootstrapping over the chosen year
-#for j in range(Nbootstrap):
-#    # Extract a bootstrap sample using the indices from Bsample
-#    bootstrap_indices = Bsample[j] + np.arange(BootstrapSize)
-#    BootstrapSample[j, :] = Winddata[bootstrap_indices]
 print("========================================================")
 print("Starting Bootstrap...")
 for i in range(Nbootstrap):
+    
     print("i = ", i)
+    
+    #for i in range(N1year): # you take the range of this 1 year
+        
+    # here you take a random sample and then use that sample to locate the next year
+    Yearsample = np.random.randint(low = 0, high = len(WindData) - N1year) #, size = (Nbootstrap,BootstrapSize))
+
+    print("Yearsample = ", Yearsample)
+
+    Winddata_1_year = WindData[Yearsample:Yearsample + N1year]
+    #print("Winddata_1_year = ", Winddata_1_year)
+
+    #Bsample = np.random.randint(low = 0, high = 8, size = (Nbootstrap,BootstrapSize))
+    #Bsample = np.random.randint(low = 0, high = len(WindData) - N1year)
+
+    BootstrapSize = len(Winddata_1_year)
+
+    # now select the year in which we do the bootstrapping
+    BootstrapSample = np.zeros((Nbootstrap,BootstrapSize))
+
+    # now do bootstrapping over the chosen year
+    #for j in range(Nbootstrap):
+    #    # Extract a bootstrap sample using the indices from Bsample
+    #    bootstrap_indices = Bsample[j] + np.arange(BootstrapSize)
+    #    BootstrapSample[j, :] = Winddata[bootstrap_indices]
+    
     for j in range(BootstrapSize):
         ##print("Winddata_1_year['Timestamp'].idxmin() = ",Winddata_1_year['Timestamp'].idxmin())
         ##print("Winddata_1_year['Timestamp'].idxmax() = ",Winddata_1_year['Timestamp'].idxmax())
@@ -129,11 +134,19 @@ print("DONE!!")
 BootstrapMeans = np.mean(BootstrapSample, axis=1)
 BootstrapMeans = np.sort(BootstrapMeans)
 
-Rlow = int((Nbootstrap+1) * (alpha/2) )
-Rhigh = int((Nbootstrap+1) * (1-alpha/2))
+#print(Nbootstrap)
+#print(alpha)
+#print(int((Nbootstrap+1) * (alpha/2) ))
+#Rlow = int((Nbootstrap+1) * (alpha/2) )
+#print(Rlow)
+#Rhigh = int((Nbootstrap+1) * ((1-alpha)/2))
+#print(Rhigh)
 
-CIn_B = BootstrapMeans[Rlow]
-CIp_B = BootstrapMeans[Rhigh]
+#CIn_B = BootstrapMeans[Rlow]
+#CIp_B = BootstrapMeans[Rhigh]
+
+CIn_B = BootstrapMeans.min()
+CIp_B = BootstrapMeans.max()
 
 print('Confidence interval based on bootstrapping: [' + str(CIn_B) + ', ' + str(CIp_B) + ']')
 
@@ -168,7 +181,7 @@ ax0.errorbar([1, 2], [Umean, np.mean(BootstrapMeans)],
              yerr = [(CIp_N - CIn_N), (CIp_B - CIn_B)],
             linestyle = '',marker = 'o',capsize = 5)
 ax0.set_xlim([0.5,3.5])
-ax0.set_xticks([1,2,3])
+ax0.set_xticks([1,2])
 ax0.set_xticklabels(['Normal dist.','Bootstrapping'])
 ax0.set_ylabel('Annual mean wind speed [m/s]')
 plt.savefig(cur + '\\res\\Normal_vs_Bootstrap.eps')
