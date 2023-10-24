@@ -71,7 +71,7 @@ print("Umean = ", Umean)
 print("Ustd = ", Ustd)
 print("n = ", n)
 
-BootstrapSize = N1year
+BootstrapSize = 10000 #N1year
 
 # now select the year in which we do the bootstrapping
 BootstrapSample = np.zeros((Nbootstrap,BootstrapSize))
@@ -93,7 +93,7 @@ for y in years:
 
     #Winddata_1_year = WindData[Yearsample:Yearsample + N1year]
     Winddata_1_year = WindData[WindData['Year'] == int(y)]
-    print("Winddata_1_year = ", Winddata_1_year)
+    #print("Winddata_1_year = ", Winddata_1_year)
 
     #Bsample = np.random.randint(low = 0, high = 8, size = (Nbootstrap,BootstrapSize))
     #Bsample = np.random.randint(low = 0, high = len(WindData) - N1year)
@@ -209,6 +209,9 @@ pdf_T = (1/np.sqrt(dU))*stats.t.pdf((Ubins - Umean)/(Ustd/np.sqrt(n)), n - 1)
 
 # Generating an empirical pdf from the bootstrap sample
 BootstrapHist = np.histogram(BootstrapMeans,bins = Ubins)
+
+plt.hist(BootstrapMeans,bins = Ubins) 
+
 BootstrapDist = stats.rv_histogram(BootstrapHist)
 pdf_B = BootstrapDist.pdf(Ubins)
 
