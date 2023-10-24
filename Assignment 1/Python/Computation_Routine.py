@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 import sklearn
 import sklearn.neural_network
 
+from Bootstrap import bootstrap
+
 
 # %% FUNCTIONS
 
@@ -23,11 +25,15 @@ def limit_state_function(Delta, N, k, Xm, Mx, m):
     #g_grad = lambda u: 
     return g #, g_grad
 
-user_defined = 0.2
+BootstrapMeans, BootstrapSample, X_W = bootstrap(WindData, Nbootstrap)
+
+#user_defined = 0.06
 
 X_M = [1,0.2]# Loads model uncertainty (you get this from Part3)
-X_W = [1,user_defined]# Uncertainty in wind conditions (you get this from Part2)
+#X_W = [1,user_defined]# Uncertainty in wind conditions (you get this from Part2)
 
 N = 1000 # User-defined
 k = # Fatigue strength normalization factor (?)
 m = # Fatigue S-N curve slope (?)
+
+Delta = log.norm.ppf
