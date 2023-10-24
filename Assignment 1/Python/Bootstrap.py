@@ -265,3 +265,28 @@ plt.legend()
 plt.savefig(cur + '\\res\\Normal_vs_Bootstrap_Probability_Density.eps')
 
 plt.show()
+
+# Plot pdfs
+
+Ubins = np.linspace(7.5,10,100)
+
+pdf_N = stats.norm.pdf(Ubins,Umean,Ustd/np.sqrt(n))
+dU = Ubins[1]-Ubins[0] # Scaling factor for the t-pdf to make sure we get a valid pdf for every bin spacing
+pdf_T = (1/np.sqrt(dU))*stats.t.pdf((Ubins - Umean)/(Ustd/np.sqrt(n)), n - 1)
+
+# Generating an empirical pdf from the bootstrap sample
+BootstrapHist = np.histogram(BootstrapMeans,bins = Ubins)
+BootstrapDist = stats.rv_histogram(BootstrapHist)
+pdf_B = BootstrapDist.pdf(Ubins)
+
+fig1, ax1 = plt.subplots()
+p11 = ax1.plot(Ubins,pdf_N,'--r', label = 'Normal')
+p12 = ax1.plot(Ubins,pdf_B,'-b', label = 'Bootstrapping')
+p13 = ax1.plot(Ubins,pdf_T,'-k', label = 'T-dist')
+plt.xlabel('Annual mean wind speed [m/s]')
+plt.ylabel('Probability density')
+plt.legend()
+
+plt.savefig(cur + '\\res\\Normal_vs_Bootstrap_Probability_Density_withT.eps')
+
+plt.show()

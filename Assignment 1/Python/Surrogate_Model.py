@@ -362,3 +362,35 @@ if training_model:
     axs5[1].legend(['Point-to-point comparisons','1:1 relation'])
     plt.tight_layout()             
     plt.show()
+    
+def scalers():
+    
+    InputData = pd.read_excel('ML_ExampleDataSet.xlsx','InputVariables')
+    #InputData.index = InputData['Sample_No'] # Make the "Sample_No" column as index of the data
+    InputData = InputData.set_index('Sample_No',drop = False)
+    InputData # Show the first few rows of the data
+
+    TargetData = pd.read_excel('ML_ExampleDataSet.xlsx','LoadResults')
+    TargetData.set_index('PointNo', drop = False, inplace = True) # Make the "PointNo" column as index of the data
+    TargetData # Show the first few rows of the data
+
+    AllInputData = InputData.where(InputData['Sample_No']==TargetData['PointNo'])
+    AllTargetData = TargetData.where(TargetData['PointNo']==InputData['Sample_No'])
+    AllInputData.drop(columns = 'Sample_No', inplace = True)
+    AllTargetData.drop(columns = 'PointNo', inplace = True)
+    nsamples = AllInputData['U'].count() # Find the total number of data points in the data frame
+    FeatureNames = AllInputData.columns.values
+    DependentVariableNames = AllTargetData.columns.values
+    
+    Y1 = AllTargetData['Tower_base_fore_aft_M_x']
+    
+    ANNmodel = nn.MLPRegressor()
+    
+    ANNmodel.get_params()
+    
+    Xscaler = sklearn.preprocessing.StandardScaler()
+    Yscaler = sklearn.preprocessing.StandardScaler()
+    Xscaler = Xscaler.fit(AllInputData)
+    Yscaler = Yscaler.fit(AllTargetData['Tower_base_fore_aft_M_x'].values.reshape(-1, 1))
+    
+    return Xscaler, Yscaler

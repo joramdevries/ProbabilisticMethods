@@ -277,3 +277,27 @@ if monte_carlo_plot:
     ax[1].set_ylim([0,7])
     plt.savefig(cur + '\\res\\turbulence_plot.eps')
     plt.show()
+    
+def Weibull_parameters(WindData):
+    
+    # WIND SPEED DISTRIBUTION FIT
+    Wsp0 = np.asarray(WindData['Wsp'])
+    print("Wsp0 = ", Wsp0)
+    print("---------------------------------------")
+    
+    #Wsp_mean = np.mean(Wsp0)
+    #Wsp_std = np.std(Wsp0)
+    
+    WeibLikelihoodFunc = lambda theta: - np.sum( np.log( stats.weibull_min.pdf(Wsp0, loc = 0, scale = theta[0], c = theta[1])) )
+    print("WeibLikelihoodFunc = ", WeibLikelihoodFunc)
+    Weib0 = scipy.optimize.minimize(WeibLikelihoodFunc, [5,1])
+    print("---------------------------------------")
+    
+    print("Weib0 = ", Weib0)
+    WeibullA = Weib0.x[0]
+    Weibullk = Weib0.x[1]
+    print("---------------------------------------")
+    print("WeibullA = ", WeibullA)
+    print("Weibullk = ", Weibullk)
+    
+    return WeibullA, Weibullk
