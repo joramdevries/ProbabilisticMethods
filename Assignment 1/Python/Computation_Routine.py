@@ -14,7 +14,11 @@ import matplotlib.pyplot as plt
 import sklearn
 import sklearn.neural_network as nn
 
-from scipy.stats import truncnorm
+import os
+
+import openturns as ot
+
+from scipy.stats import truncnorm, qmc
 
 from datetime import datetime, timedelta
 
@@ -27,6 +31,9 @@ import warnings
 import Bootstrap as BS
 import Joint_Distribution_Fit as JDF
 import Surrogate_Model as SM
+
+# %% CUR
+cur = os.getcwd()
 
 # %% FILTER WARNINGS
 
@@ -209,7 +216,7 @@ SigmaAlphaFunc = lambda u: np.min(np.concatenate([[np.ones(len(u))],[1/u]]), axi
 
 Alpha = lambda u, F: JDF.NormalDist(2,F,MuAlphaFunc(u),SigmaAlphaFunc(u))
 
-# %% START ROUTINE
+# %% START ROUTINE CRUDE MC
 
 
 # Running Joint Distribution Fit
@@ -257,7 +264,7 @@ X_W = JDF.NormalDist(2, np.random.rand(N_MC), X_w[0], X_w[1])
 X_M = JDF.NormalDist(2, np.random.rand(N_MC), X_m[0], X_m[1])
 
 
-g = np.zeros(X_W.shape)
+g_MC = np.zeros(X_W.shape)
 
 N_st = 200  #N short term (100-200)
 
@@ -305,16 +312,19 @@ for i in range(N_MC):
     #Mx_new = insert routine_df in Surrogate model
     M_x = get_Mx(AllTargetData, routine_array, Xscaler, Yscaler, ANNmodel)
     
+    #maybe implement later for improvements
+    #M_x[M_x<0] = 0
+    
     #don't do in function
     
     #M_x = get_Mx(routine_df, AllInputData, AllTargetData)
     #print("M_x = ", M_x)
-    g[i] = Delta[i] - ( 1 / (N_st*k) ) * np.sum( (X_M[i]*M_x)**m )
+    g_MC[i] = Delta[i] - ( 1 / (N_st*k) ) * np.sum( (X_M[i]*M_x)**m )
     
     #print("current g = ", g[i])
     #print("======================================================================")
     #break
-print("g = ", g)
+print("g_MC = ", g_MC)
 
 # %% now calculate probability of failure sum(G<= 0)/NMC
 # beta = -normaldist(2,P)
@@ -344,7 +354,7 @@ print("+++++++++++++++++++++++++++++++++++++++++++++")
 # 
 # =============================================================================
 
-Nfail = np.sum(g <= 0)
+Nfail = np.sum(g_MC <= 0)
 
 PoF = Nfail/N_MC
 beta = JDF.NormalDist(2,PoF)
@@ -358,11 +368,189 @@ print("Number of failure events observed = ", Nfail)
 
 # Plot failure surface based on MC results
 
-fig0,axs0 = plt.subplots(figsize = (5,5))
-#axs0.plot(Delta,X_M)
-axs0.plot(Delta[g > 0],X_M[g >0],'*b')
-axs0.plot(Delta[g <= 0],X_M[g <=0],'*r')
-axs0.set_xlabel('$Delta$')
-axs0.set_ylabel('$X_M$')
+# Subplot 1
+fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+
+axs[0].plot(Delta[g_MC > 0], X_M[g_MC > 0], '*b')
+axs[0].plot(Delta[g_MC <= 0], X_M[g_MC <= 0], '*r')
+axs[0].set_xlabel('$\Delta$')
+axs[0].set_ylabel('$X_M$')
+#axs[0].set_title('Subplot 1')
+
+# Subplot 2
+axs[1].plot(Delta[g_MC > 0], X_W[g_MC > 0], '*b')
+axs[1].plot(Delta[g_MC <= 0], X_W[g_MC <= 0], '*r')
+axs[1].set_xlabel('$\Delta$')
+axs[1].set_ylabel('$X_W$')
+#axs[1].set_title('Subplot 2')
+
+# Subplot 3
+axs[2].plot(X_W[g_MC > 0], X_M[g_MC > 0], '*b')
+axs[2].plot(X_W[g_MC <= 0], X_M[g_MC <= 0], '*r')
+axs[2].set_xlabel('$X_W$')
+axs[2].set_ylabel('$X_M$')
+#axs[2].set_title('Subplot 3')
+plt.suptitle('Crude Monte Carlo', fontsize=16, y=1.02)  # Adjust fontsize and y as needed
+
+plt.tight_layout()
+plt.savefig(cur + '\\res\\crude_monte_carlo.eps')
 plt.show()
 
+
+# %% Quasi-MC
+
+# QMC Parameters
+qmc_sequence = qmc.Sobol(d=3)  # Sobol sequence with dimension 3
+N_QMC = 10**4
+
+sobol_samples = qmc_sequence.random(N_MC)
+
+Delta_Q = JDF.LogNormDist(2, sobol_samples[:, 0], delta[0], delta[1])
+X_W_Q = JDF.NormalDist(2, sobol_samples[:, 1], X_w[0], X_w[1])
+X_M_Q = JDF.NormalDist(2, sobol_samples[:, 2], X_m[0], X_m[1])
+
+
+g_QMC = np.zeros(X_W_Q.shape)
+
+#iterations = N_st
+
+now = datetime.now()
+
+start_time_str = now.strftime("%H:%M:%S")
+
+start_time = datetime.strptime(start_time_str, "%H:%M:%S")
+
+print("Start of Computation Routine: ", start_time_str)
+print("======================================================================")
+
+#Xtrain, Xtest, Ytrain, Ytest, Yscaler = train_surrogate_model(AllInputData, AllTargetData)
+
+#Xscaler, Yscaler = SM.scalers(AllInputData, AllTargetData)
+
+#ANNmodel, Xscaler, Yscaler = SM.training(AllInputData, AllTargetData)
+ 
+for i in range(N_QMC):
+    
+    #print("i = ", i)
+    U_routine = stats.weibull_min.ppf(np.random.rand(N_st), loc = 0, 
+                                      scale = A_weibull*X_W_Q[i], c = k_weibull)
+    
+    #random.weibull(U, N_st, scale = A_weibull*X_W[i],
+    #                           c = k_weibull)
+    
+    SigmaU_routine = SigmaU(U_routine,np.random.rand(N_st))
+    
+    Alpha_routine = Alpha(U_routine,np.random.rand(N_st))
+    
+# =============================================================================
+#     routine_df = pd.DataFrame({'U': U_routine, 
+#                            'SigmaU': SigmaU_routine,
+#                            'Alpha' : Alpha_routine
+#                           })
+# =============================================================================
+    
+    routine_array = np.column_stack((U_routine,SigmaU_routine,Alpha_routine))
+    
+    #put in an array instead of dataframe
+    
+    #Mx_new = insert routine_df in Surrogate model
+    M_x = get_Mx(AllTargetData, routine_array, Xscaler, Yscaler, ANNmodel)
+    
+    #maybe implement later for improvements
+    #M_x[M_x<0] = 0
+    
+    #don't do in function
+    
+    #M_x = get_Mx(routine_df, AllInputData, AllTargetData)
+    #print("M_x = ", M_x)
+    g_QMC[i] = Delta_Q[i] - ( 1 / (N_st*k) ) * np.sum( (X_M_Q[i]*M_x)**m )
+    
+    #print("current g = ", g[i])
+    #print("======================================================================")
+    #break
+print("g_QMC = ", g_QMC)
+
+# %% now calculate probability of failure sum(G<= 0)/NMC
+# beta = -normaldist(2,P)
+
+now = datetime.now()
+
+end_time_str = now.strftime("%H:%M:%S")
+
+end_time = datetime.strptime(end_time_str, "%H:%M:%S")
+    
+print("End of Computation Routine: ", end_time_str)
+
+print("+++++++++++++++++++++++++++++++++++++++++++++")
+
+# =============================================================================
+# 
+# # Calculate duration
+# duration = end_time - start_time
+# 
+# days, seconds = duration.days, duration.seconds
+# hours = days * 24 + seconds // 3600
+# minutes = (seconds % 3600) // 60
+# seconds = seconds % 60
+# 
+# print(f"Duration of bootstrap: {hours} hours, {minutes} minutes, {seconds} seconds")
+# 
+# 
+# =============================================================================
+
+Nfail_Q = np.sum(g_QMC <= 0)
+
+PoF_Q = Nfail_Q/N_QMC
+beta_Q = JDF.NormalDist(2,PoF_Q)
+
+beta_QMC = stats.norm.ppf(1 - PoF_Q)
+
+
+print("Probability of Failure = ", PoF_Q)
+print("Reliability index = ", beta_QMC)
+print("Number of failure events observed = ", Nfail_Q)
+
+# Plot failure surface based on QMC results
+
+
+# Subplot 1
+fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+
+axs[0].plot(Delta_Q[g_QMC > 0],X_M_Q[g_QMC >0],'*b')
+axs[0].plot(Delta_Q[g_QMC <= 0],X_M_Q[g_QMC <=0],'*r')
+axs[0].set_xlabel('$\Delta$')
+axs[0].set_ylabel('$X_M$')
+#axs[0].set_title('Subplot 1')
+
+# Subplot 2
+axs[1].plot(Delta_Q[g_QMC > 0], X_W_Q[g_QMC > 0], '*b')
+axs[1].plot(Delta_Q[g_QMC <= 0], X_W_Q[g_QMC <= 0], '*r')
+axs[1].set_xlabel('$\Delta$')
+axs[1].set_ylabel('$X_W$')
+#axs[1].set_title('Subplot 2')
+
+# Subplot 3
+axs[2].plot(X_W_Q[g_QMC > 0], X_M_Q[g_QMC > 0], '*b')
+axs[2].plot(X_W_Q[g_QMC <= 0], X_M_Q[g_QMC <= 0], '*r')
+axs[2].set_xlabel('$X_W$')
+axs[2].set_ylabel('$X_M$')
+#axs[2].set_title('Subplot 3')
+
+plt.suptitle('Quasi Monte Carlo', fontsize=16, y=1.02)  # Adjust fontsize and y as needed
+
+plt.tight_layout()
+plt.savefig(cur + '\\res\\quasi_monte_carlo.eps')
+plt.show()
+
+
+#Quasi vs Crude
+betaMChist = stats.norm.ppf(1 - np.cumsum(g_MC<=0)/np.arange(1,len(g_MC)+1))
+betaQMChist = stats.norm.ppf(1 - np.cumsum(g_QMC<=0)/np.arange(1,len(g_QMC)+1))
+
+
+fig1,axs1 = plt.subplots(1,1,figsize = (6,6))
+axs1.plot(betaMChist[:100000], label = 'Crude MC')
+axs1.plot(betaQMChist[:100000], label = 'Quasi MC')
+axs1.legend()
+plt.savefig(cur + '\\res\\crude_vs_quasi_MC.eps')
+plt.show()
