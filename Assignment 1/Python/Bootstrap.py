@@ -19,54 +19,12 @@ cur = os.getcwd()
 
 from datetime import datetime, timedelta
 
-# %% IMPORT DATA
-
-WindData = pd.read_csv('HovsoreData_Sonic_100m_2004-2013.csv')
-
-WindData['Timestamp'] = pd.to_datetime(WindData['Timestamp'], format='%Y%m%d%H%M')
-
-WindData['Year'] = WindData['Timestamp'].dt.year
-
-print("Original Data has length of ", len(WindData))
-
-# %% BOOTSTRAP
-alpha =  1 - 0.95# Corresponding to 95% probability  ( alpha = 1-p)
-
-
-# Filter rows where 'Wsp' is less than or equal to 35 m/s
-filtered_WindData = WindData[WindData['Wsp'] <= 35]
-
-filtered_WindData.loc[filtered_WindData["TI"] <= 0.001] = np.nan
-
-filtered_WindData = filtered_WindData.dropna()
-
-# Save the filtered data to a new CSV file
-filtered_csv_file = 'FilteredWindData.csv'
-filtered_WindData.to_csv(filtered_csv_file, index=False)
-
-WindData = filtered_WindData
-
-print("New Data has length of ", len(WindData))
-
-U = WindData['Wsp']
-
-#%% U MEAN & U STD
-
-Umean = np.mean(U)
-Ustd = np.std(U)
-
-n = len(U) # Count the number of samples
-
-
-print("Umean = ", Umean)
-print("Ustd = ", Ustd)
-print("n = ", n)
 
 # %% BOOTSTRAP
 
 Nbootstrap = 1000
 
-def bootstrap(WindData, Nbootstrap):
+def bootstrap_function(WindData, Nbootstrap, plots):
     now = datetime.now()
     
     start_time_str = now.strftime("%H:%M:%S")
@@ -78,6 +36,8 @@ def bootstrap(WindData, Nbootstrap):
      #99999  # How many times you wanna do this random act
     #BootstrapSize = len(U)
     #BootstrapMeans = np.mean(U)
+    
+    alpha =  1 - 0.95# Corresponding to 95% probability  ( alpha = 1-p)
     
     N1year = int(1*365*24*6) # taking an interval for 1 year with 365 days with 24 hours with 6 times 10 minute intervals
     
@@ -119,23 +79,25 @@ def bootstrap(WindData, Nbootstrap):
         
     print("DONE!!")
     
-    # Create a histogram
-    plt.hist(BootstrapSample, bins=20, edgecolor='black')
-    plt.title('Bootstrap Sample Histogram')
-    plt.xlabel('Values')
-    plt.ylabel('Frequency')
-    plt.savefig(cur + '\\res\\Histogram_Bootstrap.eps')
-    plt.show()
+    if plots:
+        # Create a histogram
+        plt.hist(BootstrapSample, bins=20, edgecolor='black')
+        plt.title('Bootstrap Sample Histogram')
+        plt.xlabel('Values')
+        plt.ylabel('Frequency')
+        plt.savefig(cur + '\\res\\Histogram_Bootstrap.eps')
+        plt.show()
 
     mean_bsample = BootstrapSample.mean()
-
-    # Create a histogram
-    plt.hist(BootstrapSample/mean_bsample, bins=20, edgecolor='black')
-    plt.title('Bootstrap Sample Histogram')
-    plt.xlabel('Values')
-    plt.ylabel('Frequency')
-    plt.savefig(cur + '\\res\\Histogram_Bootstrap_Uncertainty.eps')
-    plt.show()
+    
+    if plots:
+        # Create a histogram
+        plt.hist(BootstrapSample/mean_bsample, bins=20, edgecolor='black')
+        plt.title('Bootstrap Sample Histogram')
+        plt.xlabel('Values')
+        plt.ylabel('Frequency')
+        plt.savefig(cur + '\\res\\Histogram_Bootstrap_Uncertainty.eps')
+        plt.show()
 
     BootstrapSample_new = BootstrapSample/mean_bsample
 
@@ -143,19 +105,20 @@ def bootstrap(WindData, Nbootstrap):
     shape, loc, scale = stats.lognorm.fit(BootstrapSample_new, loc=0)
     pdf_lognorm = stats.lognorm.pdf(BootstrapSample_new, shape, loc, scale)
 
-    fig, ax = plt.subplots(figsize=(8, 4))
-    ax2 = ax.twinx()
-
-    ax.hist(BootstrapSample_new, bins='auto', density=True)
-    ax2.hist(BootstrapSample_new, bins='auto')
-    ax.plot(BootstrapSample_new, pdf_lognorm)
-    ax2.set_ylabel('Frequency')
-    ax.set_ylabel('Probability')
-    ax.set_xlabel('Xw')
-    ax.set_title('Bootstrap Sample Histogram')
-
-    plt.savefig(cur + '\\res\\Histogram_Bootstrap_Uncertainty.eps')
-    plt.show()
+    if plots:
+        fig, ax = plt.subplots(figsize=(8, 4))
+        ax2 = ax.twinx()
+    
+        ax.hist(BootstrapSample_new, bins='auto', density=True)
+        ax2.hist(BootstrapSample_new, bins='auto')
+        ax.plot(BootstrapSample_new, pdf_lognorm)
+        ax2.set_ylabel('Frequency')
+        ax.set_ylabel('Probability')
+        ax.set_xlabel('Xw')
+        ax.set_title('Bootstrap Sample Histogram')
+    
+        plt.savefig(cur + '\\res\\Histogram_Bootstrap_Uncertainty.eps')
+        plt.show()
 
     BootstrapMeans = np.sort(BootstrapSample)
 
@@ -199,94 +162,143 @@ def bootstrap(WindData, Nbootstrap):
     
     return BootstrapMeans, BootstrapSample, X_w
 
-BootstrapMeans, BootstrapSample, X_w = bootstrap(WindData, Nbootstrap)
+# %% MAIN LOOP
+if __name__ == "__main__":
+    
+    # %% IMPORT DATA
 
-Rlow = int((Nbootstrap+1) * (alpha/2) )
-#print(Rlow)
-Rhigh = int((Nbootstrap+1) * ((1-alpha)/2))
-#print(Rhigh)
+    WindData = pd.read_csv('HovsoreData_Sonic_100m_2004-2013.csv')
 
-CIn_B = BootstrapMeans[Rlow]
-CIp_B = BootstrapMeans[Rhigh]
+    WindData['Timestamp'] = pd.to_datetime(WindData['Timestamp'], format='%Y%m%d%H%M')
 
+    WindData['Year'] = WindData['Timestamp'].dt.year
 
-print('Confidence interval based on bootstrapping: [' + str(CIn_B) + ', ' + str(CIp_B) + ']')
+    print("Original Data has length of ", len(WindData))
 
-
-
-# %% NORMAL DISTRIBUTION
-
-# Confidence intervals using directly the Standard Normal distribution
-k_alpha = stats.norm.ppf(alpha/2)
-k_alpha_p = - stats.norm.ppf(1-alpha/2)
-
-CIn_N = Umean + k_alpha * (Ustd/(np.sqrt(n)))
-CIp_N = Umean - k_alpha * (Ustd/(np.sqrt(n)))
-
-print('Confidence interval based on the Normal distribution: [' + str(CIn_N) + ', ' + str(CIp_N) + ']')
+    # %% BOOTSTRAP
+    alpha =  1 - 0.95# Corresponding to 95% probability  ( alpha = 1-p)
 
 
-# %% PLOTTING
+    # Filter rows where 'Wsp' is less than or equal to 35 m/s
+    filtered_WindData = WindData[WindData['Wsp'] <= 35]
 
-# Plot errorbars
-fig0, ax0 = plt.subplots()
-ax0.errorbar([1, 2], [Umean, np.mean(BootstrapMeans)],
-             yerr = [(CIp_N - CIn_N), (CIp_B - CIn_B)],
-            linestyle = '',marker = 'o',capsize = 5)
-ax0.set_xlim([0.5,3.5])
-ax0.set_xticks([1,2])
-ax0.set_xticklabels(['Normal dist.','Bootstrapping'])
-ax0.set_ylabel('Annual mean wind speed [m/s]')
-plt.savefig(cur + '\\res\\Normal_vs_Bootstrap.eps')
-plt.show()
+    filtered_WindData.loc[filtered_WindData["TI"] <= 0.001] = np.nan
 
-# Plot pdfs
+    filtered_WindData = filtered_WindData.dropna()
 
-Ubins = np.linspace(7.5,12,100)
+    # Save the filtered data to a new CSV file
+    filtered_csv_file = 'FilteredWindData.csv'
+    filtered_WindData.to_csv(filtered_csv_file, index=False)
 
-pdf_N = stats.norm.pdf(Ubins,Umean,Ustd/np.sqrt(n))
-dU = Ubins[1]-Ubins[0] # Scaling factor for the t-pdf to make sure we get a valid pdf for every bin spacing
-pdf_T = (1/np.sqrt(dU))*stats.t.pdf((Ubins - Umean)/(Ustd/np.sqrt(n)), n - 1)
+    WindData = filtered_WindData
 
-# Generating an empirical pdf from the bootstrap sample
-BootstrapHist = np.histogram(BootstrapMeans,bins = Ubins)
+    print("New Data has length of ", len(WindData))
 
-#plt.hist(BootstrapMeans,bins = Ubins) 
+    U = WindData['Wsp']
 
-BootstrapDist = stats.rv_histogram(BootstrapHist)
-pdf_B = BootstrapDist.pdf(Ubins)
+    #%% U MEAN & U STD
 
-fig1, ax1 = plt.subplots()
-p11 = ax1.plot(Ubins,pdf_N,'--r', label = 'Normal')
-p12 = ax1.plot(Ubins,pdf_B,'-b', label = 'Bootstrapping')
-plt.xlabel('Annual mean wind speed [m/s]')
-plt.ylabel('Probability density')
-plt.legend()
-plt.savefig(cur + '\\res\\Normal_vs_Bootstrap_Probability_Density.eps')
+    Umean = np.mean(U)
+    Ustd = np.std(U)
 
-plt.show()
+    n = len(U) # Count the number of samples
 
-# Plot pdfs
 
-Ubins = np.linspace(7.5,10,100)
-
-pdf_N = stats.norm.pdf(Ubins,Umean,Ustd/np.sqrt(n))
-dU = Ubins[1]-Ubins[0] # Scaling factor for the t-pdf to make sure we get a valid pdf for every bin spacing
-pdf_T = (1/np.sqrt(dU))*stats.t.pdf((Ubins - Umean)/(Ustd/np.sqrt(n)), n - 1)
-
-# Generating an empirical pdf from the bootstrap sample
-BootstrapHist = np.histogram(BootstrapMeans,bins = Ubins)
-BootstrapDist = stats.rv_histogram(BootstrapHist)
-pdf_B = BootstrapDist.pdf(Ubins)
-
-fig1, ax1 = plt.subplots()
-p11 = ax1.plot(Ubins,pdf_N,'--r', label = 'Normal')
-p12 = ax1.plot(Ubins,pdf_B,'-b', label = 'Bootstrapping')
-p13 = ax1.plot(Ubins,pdf_T,'-k', label = 'T-dist')
-plt.xlabel('Annual mean wind speed [m/s]')
-plt.ylabel('Probability density')
-plt.legend()
-
-plt.savefig(cur + '\\res\\Normal_vs_Bootstrap_Probability_Density_withT.eps')
-
-plt.show()
+    print("Umean = ", Umean)
+    print("Ustd = ", Ustd)
+    print("n = ", n)
+    
+    
+    plots = True
+    
+    BootstrapMeans, BootstrapSample, X_w = bootstrap_function(WindData, Nbootstrap, plots)
+    
+    Rlow = int((Nbootstrap+1) * (alpha/2) )
+    #print(Rlow)
+    Rhigh = int((Nbootstrap+1) * ((1-alpha)/2))
+    #print(Rhigh)
+    
+    CIn_B = BootstrapMeans[Rlow]
+    CIp_B = BootstrapMeans[Rhigh]
+    
+    
+    print('Confidence interval based on bootstrapping: [' + str(CIn_B) + ', ' + str(CIp_B) + ']')
+    
+    
+    
+    # %% NORMAL DISTRIBUTION
+    
+    # Confidence intervals using directly the Standard Normal distribution
+    k_alpha = stats.norm.ppf(alpha/2)
+    k_alpha_p = - stats.norm.ppf(1-alpha/2)
+    
+    CIn_N = Umean + k_alpha * (Ustd/(np.sqrt(n)))
+    CIp_N = Umean - k_alpha * (Ustd/(np.sqrt(n)))
+    
+    print('Confidence interval based on the Normal distribution: [' + str(CIn_N) + ', ' + str(CIp_N) + ']')
+    
+    
+    # %% PLOTTING
+    
+    # Plot errorbars
+    fig0, ax0 = plt.subplots()
+    ax0.errorbar([1, 2], [Umean, np.mean(BootstrapMeans)],
+                 yerr = [(CIp_N - CIn_N), (CIp_B - CIn_B)],
+                linestyle = '',marker = 'o',capsize = 5)
+    ax0.set_xlim([0.5,3.5])
+    ax0.set_xticks([1,2])
+    ax0.set_xticklabels(['Normal dist.','Bootstrapping'])
+    ax0.set_ylabel('Annual mean wind speed [m/s]')
+    plt.savefig(cur + '\\res\\Normal_vs_Bootstrap.eps')
+    plt.show()
+    
+    # Plot pdfs
+    
+    Ubins = np.linspace(7.5,12,100)
+    
+    pdf_N = stats.norm.pdf(Ubins,Umean,Ustd/np.sqrt(n))
+    dU = Ubins[1]-Ubins[0] # Scaling factor for the t-pdf to make sure we get a valid pdf for every bin spacing
+    pdf_T = (1/np.sqrt(dU))*stats.t.pdf((Ubins - Umean)/(Ustd/np.sqrt(n)), n - 1)
+    
+    # Generating an empirical pdf from the bootstrap sample
+    BootstrapHist = np.histogram(BootstrapMeans,bins = Ubins)
+    
+    #plt.hist(BootstrapMeans,bins = Ubins) 
+    
+    BootstrapDist = stats.rv_histogram(BootstrapHist)
+    pdf_B = BootstrapDist.pdf(Ubins)
+    
+    fig1, ax1 = plt.subplots()
+    p11 = ax1.plot(Ubins,pdf_N,'--r', label = 'Normal')
+    p12 = ax1.plot(Ubins,pdf_B,'-b', label = 'Bootstrapping')
+    plt.xlabel('Annual mean wind speed [m/s]')
+    plt.ylabel('Probability density')
+    plt.legend()
+    plt.savefig(cur + '\\res\\Normal_vs_Bootstrap_Probability_Density.eps')
+    
+    plt.show()
+    
+    # Plot pdfs
+    
+    Ubins = np.linspace(7.5,10,100)
+    
+    pdf_N = stats.norm.pdf(Ubins,Umean,Ustd/np.sqrt(n))
+    dU = Ubins[1]-Ubins[0] # Scaling factor for the t-pdf to make sure we get a valid pdf for every bin spacing
+    pdf_T = (1/np.sqrt(dU))*stats.t.pdf((Ubins - Umean)/(Ustd/np.sqrt(n)), n - 1)
+    
+    # Generating an empirical pdf from the bootstrap sample
+    BootstrapHist = np.histogram(BootstrapMeans,bins = Ubins)
+    BootstrapDist = stats.rv_histogram(BootstrapHist)
+    pdf_B = BootstrapDist.pdf(Ubins)
+    
+    fig1, ax1 = plt.subplots()
+    p11 = ax1.plot(Ubins,pdf_N,'--r', label = 'Normal')
+    p12 = ax1.plot(Ubins,pdf_B,'-b', label = 'Bootstrapping')
+    p13 = ax1.plot(Ubins,pdf_T,'-k', label = 'T-dist')
+    plt.xlabel('Annual mean wind speed [m/s]')
+    plt.ylabel('Probability density')
+    plt.legend()
+    
+    plt.savefig(cur + '\\res\\Normal_vs_Bootstrap_Probability_Density_withT.eps')
+    
+    plt.show()

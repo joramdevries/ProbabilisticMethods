@@ -18,9 +18,13 @@ from scipy.stats import truncnorm
 
 from datetime import datetime, timedelta
 
-from Bootstrap import bootstrap
-from Joint_Distribution_Fit import Weibull_parameters
-from Surrogate_Model import scalers
+#from Bootstrap import bootstrap_function
+#from Joint_Distribution_Fit import Weibull_parameters
+#from Surrogate_Model import scalers
+
+import Bootstrap as BS
+import Joint_Distribution_Fit as JDF
+import Surrogate_Model as SM
 
 # %% IMPORT DATA
 
@@ -49,6 +53,10 @@ WindData = filtered_WindData
 print("New Data has length of ", len(WindData))
 
 U = WindData['Wsp']
+
+WindData["SigmaU"] = WindData['Wsp']*WindData['TI']
+
+SigmaU = WindData["SigmaU"]
 
 #%% U MEAN & U STD
 
@@ -91,7 +99,7 @@ def get_Mx(input_data):
     
     ANNmodel = nn.MLPRegressor()
     
-    Xscaler, Yscaler = scalers()
+    Xscaler, Yscaler = SM.scalers()
     
     pred_scaled = ANNmodel.predict(Xscaler.transform(input_data))
     Mx = Yscaler.inverse_transform(pred_scaled.reshape(-1, 1)).ravel()
@@ -133,21 +141,31 @@ MuSigmaFunc = lambda u: pMu[0]*u**2 + pMu[1]*u + pMu[2]
 N_MC = 10**4
 
 # Running Joint Distribution Fit
-
-A_weibull, k_weibull = Weibull_parameters(WindData)
+print("----------------------------------------------------------------------")
+print("Getting Weibull Parameters...")
+A_weibull, k_weibull = JDF.Weibull_parameters(WindData)
+#print("A_Weibull = ", A_weibull)
+#print("k_Weibull = ", k_weibull)
+print("----------------------------------------------------------------------")
 
 
 # Running bootstrap
 Nbootstrap = 1000 #give number for bootstrap
 
-BootstrapMeans, BootstrapSample, X_w = bootstrap(WindData, Nbootstrap)
+plots = False # give True if you also wanna see the bootstrap plots
+
+print("----------------------------------------------------------------------")
+print("Getting Bootstrap Parameters...")
+BootstrapMeans, BootstrapSample, X_w = BS.bootstrap_function(WindData, Nbootstrap, plots)
+print("X_w = ", X_w)
+print("----------------------------------------------------------------------")
 
 #user_defined = 0.06
 delta = [1,0.3]
 X_m = [1,0.2]# Loads model uncertainty (you get this from Part3)
 #X_W = [1,user_defined]# Uncertainty in wind conditions (you get this from Part2)
 
-N = 1000 # User-defined
+N = 10**4 # User-defined
 k = 4 * 10**12 # Fatigue strength normalization factor (?)
 m = 3 # Fatigue S-N curve slope (?)
 
@@ -177,9 +195,9 @@ for i in range(iterations):
     #random.weibull(U, N_st, scale = A_weibull*X_W[i],
     #                           c = k_weibull)
     
-    SigmaU_routine = MuSigmaFunc(U)
+    SigmaU_routine = MuSigmaFunc(U_routine)
     
-    Alpha_routine = get_alpha(U)
+    Alpha_routine = get_alpha(U_routine)
     
     routine_df = pd.DataFrame({'U': U_routine, 
                            'SigmaU': SigmaU_routine,
