@@ -65,6 +65,37 @@ WindData["SigmaU"] = WindData['Wsp']*WindData['TI']
 
 SigmaU = WindData["SigmaU"]
 
+# %% INPUT DATA and TARGET DATA
+
+InputData = pd.read_excel('ML_ExampleDataSet.xlsx','InputVariables')
+#InputData.index = InputData['Sample_No'] # Make the "Sample_No" column as index of the data
+InputData = InputData.set_index('Sample_No',drop = False)
+InputData # Show the first few rows of the data
+
+TargetData = pd.read_excel('ML_ExampleDataSet.xlsx','LoadResults')
+TargetData.set_index('PointNo', drop = False, inplace = True) # Make the "PointNo" column as index of the data
+TargetData # Show the first few rows of the data
+
+AllInputData = InputData.where(InputData['Sample_No']==TargetData['PointNo'])
+AllTargetData = TargetData.where(TargetData['PointNo']==InputData['Sample_No'])
+AllInputData.drop(columns = 'Sample_No', inplace = True)
+AllTargetData.drop(columns = 'PointNo', inplace = True)
+nsamples = AllInputData['U'].count() # Find the total number of data points in the data frame
+FeatureNames = AllInputData.columns.values
+DependentVariableNames = AllTargetData.columns.values
+
+Y1 = AllTargetData['Tower_base_fore_aft_M_x']
+
+ANNmodel = nn.MLPRegressor()
+
+ANNmodel.get_params()
+
+#print(AllInputData)
+#print(AllTargetData)
+AllInputData.drop(columns = 'MannL', inplace = True)
+AllInputData.drop(columns = 'MannGamma', inplace = True)
+AllInputData.drop(columns = 'VeerDeltaPhi', inplace = True)
+
 #%% U MEAN & U STD
 
 Umean = np.mean(U)
@@ -102,11 +133,38 @@ def get_alpha(U):
 
     return sample
 
-def get_Mx(input_data):
+def train_surrogate_model(AllInputData, AllTargetData):
         
-    Yout, Yout_test = SM.scalers()
+    Xtrain, Xtest, Ytrain, Ytest, Yscaler = SM.scalers(AllInputData, AllTargetData)
     
-    return Yout
+    return Xtrain, Xtest, Ytrain, Ytest, Yscaler
+
+def get_Mx(AllTargetData, input_data, Xscaler, Yscaler):
+    
+    ANNmodel = nn.MLPRegressor()
+    
+    #ANNmodel.set_params(learning_rate_init = 0.01, activation = 'relu',tol = 1e-6,n_iter_no_change = 10, hidden_layer_sizes = (12,12), validation_fraction = 0.1)
+
+    Xtrain = Xscaler.transform(input_data)
+    
+    print(Xtrain.shape)
+    
+    N_x = len(Xtrain)
+    print(N_x)
+    
+    Ytrain = Yscaler.transform(AllTargetData['Tower_base_fore_aft_M_x'].values.reshape(-1,1))
+    
+    print(Ytrain.shape)
+    
+    Xtrain = Xtrain[:Ytrain.shape]
+    
+    ANNmodel.set_params(learning_rate_init = 0.01, activation = 'relu',tol = 1e-6,n_iter_no_change = 10, hidden_layer_sizes = (12,12), validation_fraction = 0.1)
+    
+    ANNmodel.fit(Xtrain, Ytrain.ravel())
+    
+    Mx = Yscaler.inverse_transform(ANNmodel.predict(Xtrain).reshape(-1, 1)).ravel()
+    
+    return Mx
 
 
 # %% PRE MADE FUNCTIONS
@@ -189,7 +247,12 @@ start_time = datetime.strptime(start_time_str, "%H:%M:%S")
 
 print("Start of Computation Routine: ", start_time_str)
 print("======================================================================")
-for i in range(N_st):
+
+#Xtrain, Xtest, Ytrain, Ytest, Yscaler = train_surrogate_model(AllInputData, AllTargetData)
+
+Xscaler, Yscaler = SM.scalers(AllInputData, AllTargetData)
+ 
+for i in range(N_MC):
     
     print("i = ", i)
     U_routine = stats.weibull_min.ppf(np.random.rand(N_MC), loc = N_st, 
@@ -207,7 +270,10 @@ for i in range(N_st):
                            'Alpha' : Alpha_routine
                           })
     
-    M_x = get_Mx(routine_df)
+    #Mx_new = insert routine_df in Surrogate model
+    M_x = get_Mx(AllTargetData, routine_df, Xscaler, Yscaler)
+    
+    #M_x = get_Mx(routine_df, AllInputData, AllTargetData)
     
     g[i] = Delta[i] - ( 1 / (N_st*k) ) * sum( (X_M[i]*M_x)**m )
     
@@ -215,6 +281,10 @@ for i in range(N_st):
     print("======================================================================")
 
 print("g = ", g)
+
+
+# %% now calculate probability of failure sum(G<= 0)/NMC
+# beta = -normaldist(2,P)
 
 now = datetime.now()
 
@@ -226,15 +296,24 @@ print("End of Computation Routine: ", end_time_str)
 
 print("+++++++++++++++++++++++++++++++++++++++++++++")
 
+# =============================================================================
+# 
+# # Calculate duration
+# duration = end_time - start_time
+# 
+# days, seconds = duration.days, duration.seconds
+# hours = days * 24 + seconds // 3600
+# minutes = (seconds % 3600) // 60
+# seconds = seconds % 60
+# 
+# print(f"Duration of bootstrap: {hours} hours, {minutes} minutes, {seconds} seconds")
+# 
+# 
+# =============================================================================
 
-# Calculate duration
-duration = end_time - start_time
-
-days, seconds = duration.days, duration.seconds
-hours = days * 24 + seconds // 3600
-minutes = (seconds % 3600) // 60
-seconds = seconds % 60
-
-print(f"Duration of bootstrap: {hours} hours, {minutes} minutes, {seconds} seconds")
+PoF = sum(g<=0)/N_MC
+beta = JDF.NormalDist(2,PoF)
 
 
+print("Probability of Failure = ", PoF)
+print("Beta of Failure = ", beta)

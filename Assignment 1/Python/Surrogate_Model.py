@@ -366,37 +366,24 @@ if __name__ == "__main__":
         plt.tight_layout()             
         plt.show()
     
-def scalers():
-    
-    InputData = pd.read_excel('ML_ExampleDataSet.xlsx','InputVariables')
-    #InputData.index = InputData['Sample_No'] # Make the "Sample_No" column as index of the data
-    InputData = InputData.set_index('Sample_No',drop = False)
-    InputData # Show the first few rows of the data
-
-    TargetData = pd.read_excel('ML_ExampleDataSet.xlsx','LoadResults')
-    TargetData.set_index('PointNo', drop = False, inplace = True) # Make the "PointNo" column as index of the data
-    TargetData # Show the first few rows of the data
-
-    AllInputData = InputData.where(InputData['Sample_No']==TargetData['PointNo'])
-    AllTargetData = TargetData.where(TargetData['PointNo']==InputData['Sample_No'])
-    AllInputData.drop(columns = 'Sample_No', inplace = True)
-    AllTargetData.drop(columns = 'PointNo', inplace = True)
-    nsamples = AllInputData['U'].count() # Find the total number of data points in the data frame
-    FeatureNames = AllInputData.columns.values
-    DependentVariableNames = AllTargetData.columns.values
-    
-    Y1 = AllTargetData['Tower_base_fore_aft_M_x']
+def scalers(AllInputData, AllTargetData):
     
     ANNmodel = nn.MLPRegressor()
-    
+
     ANNmodel.get_params()
     
-    #print(AllInputData)
-    #print(AllTargetData)
-    AllInputData.drop(columns = 'MannL', inplace = True)
-    AllInputData.drop(columns = 'MannGamma', inplace = True)
-    AllInputData.drop(columns = 'VeerDeltaPhi', inplace = True)
+    Xscaler = sklearn.preprocessing.StandardScaler()
+    Yscaler = sklearn.preprocessing.StandardScaler()
+    Xscaler = Xscaler.fit(AllInputData)
+    Yscaler = Yscaler.fit(AllTargetData['Tower_base_fore_aft_M_x'].values.reshape(-1, 1))
+    
+    return Xscaler, Yscaler
 
+def training(AllInputData, AllTargetData):
+    
+    ANNmodel = nn.MLPRegressor()
+
+    ANNmodel.get_params()
     
     Xscaler = sklearn.preprocessing.StandardScaler()
     Yscaler = sklearn.preprocessing.StandardScaler()
@@ -422,4 +409,4 @@ def scalers():
     Yout = Yscaler.inverse_transform(ANNmodel.predict(Xtrain).reshape(-1, 1))
     Yout_test = Yscaler.inverse_transform(ANNmodel.predict(Xtest).reshape(-1, 1))
     
-    return Yout, Yout_test
+    return Yout
