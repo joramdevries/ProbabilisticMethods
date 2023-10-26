@@ -20,7 +20,7 @@ import os
 if __name__ == "__main__":
     # %% SELECTION MENU
     
-    plots = False
+    plots = True
     training_model = True
     
     
@@ -76,7 +76,7 @@ if __name__ == "__main__":
             axi = fig3.add_subplot(2,4,i+1)
             plt.title(DependentVariableNames[i])
             plt.plot(AllInputData.SigmaU,AllTargetData.iloc[:,i],'g.',markersize = 3)
-            plt.xlabel('Wind standard deviation [m/s]')
+            plt.xlabel('Turbulence [m/s]')
             #plt.ylabel(DependentVariableNames[i])
         plt.tight_layout()
         plt.savefig(cur + '\\res\\Surrogate_model_sigma.eps')
@@ -111,10 +111,10 @@ if __name__ == "__main__":
             if i == 'U':
                 plt.plot(AllInputData.U,AllTargetData.iloc[:,0],'y.',markersize = 3)
                 plt.xlabel('Mean wind speed [m/s]')
-                plt.ylabel('Blade root flapwise moment $M_x$')
+                plt.ylabel('Blade root flapwise moment $M_x$ [Nm]')
             if i == 'SigmaU':
                 plt.plot(AllInputData.SigmaU,AllTargetData.iloc[:,0],'g.',markersize = 3)
-                plt.xlabel('Wind standard deviation [m/s]')
+                plt.xlabel('Turbulence [m/s]')
             if i == 'Alpha':
                 plt.plot(AllInputData.Alpha,AllTargetData.iloc[:,0],'r.',markersize = 3)
                 plt.xlabel('Wind shear exponent [-]')
@@ -215,7 +215,7 @@ if __name__ == "__main__":
         # MAKE A 3-RD ORDER POLYNOMIAL FIT TO THE DATA USING THE HELPER FUNCTIONS GIVEN ABOVE
         
         
-        ## WIND STANDARD DEVIATION SIGMA
+        ## Turbulence SIGMA
         for i in range(DependentVariableNames.shape[0]):
             Y1 = AllTargetData[DependentVariableNames[i]]
         
@@ -233,7 +233,7 @@ if __name__ == "__main__":
         
             plt.rc('font', size=14) 
             fig2a,axs2a = plt.subplots(1,2,figsize = (16,8))
-            plt.setp(axs2a[0], title = 'Dependence vs. standard deviation', xlabel = 'Standard Deviation [m/s]',ylabel = f'{DependentVariableNames[i]}')
+            plt.setp(axs2a[0], title = 'Dependence vs. Turbulence', xlabel = 'Turbulence [m/s]',ylabel = f'{DependentVariableNames[i]}')
             plt.setp(axs2a[1], title = 'Correlation (y-y) plot', xlabel = 'Input data',ylabel = 'Model predictions')
             axs2a[0].plot(AllInputData['SigmaU'],AllTargetData[DependentVariableNames[i]],'o',markersize = 4,color = 'g')
             axs2a[0].plot(AllInputData['SigmaU'],Ypred_O3,'x',markersize = 4,color = 'orange')
@@ -326,7 +326,7 @@ if __name__ == "__main__":
         
         plt.rc('font', size=14) 
         fig3,axs3 = plt.subplots(1,2,figsize = (16,8))
-        plt.setp(axs3[0], title = 'Dependence vs. wind speed', xlabel = 'Mean wind speed [m/s]',ylabel = 'Blade root flapwise moment $M_x$')
+        plt.setp(axs3[0], title = 'Dependence vs. wind speed', xlabel = 'Mean wind speed [m/s]',ylabel = 'Blade root flapwise moment $M_x$ [Nm]')
         plt.setp(axs3[1], title = 'Correlation (y-y) plot', xlabel = 'Input data',ylabel = 'Model predictions')
         axs3[0].plot(Xtest[:,0],Yscaler.inverse_transform(Ytest),'o',markersize = 4,color = 'y')
         axs3[0].plot(Xtest[:,0],Yout_test,'*',markersize = 4,color = 'purple')
@@ -340,7 +340,7 @@ if __name__ == "__main__":
         
         plt.rc('font', size=14) 
         fig4,axs4 = plt.subplots(1,2,figsize = (16,8))
-        plt.setp(axs4[0], title = 'Dependence vs. standard deviation', xlabel = 'Standard Deviation [m/s]',ylabel = 'Blade root flapwise moment $M_x$')
+        plt.setp(axs4[0], title = 'Dependence vs. Turbulence', xlabel = 'Turbulence [m/s]',ylabel = 'Blade root flapwise moment $M_x$ [Nm]')
         plt.setp(axs4[1], title = 'Correlation (y-y) plot', xlabel = 'Input data',ylabel = 'Model predictions')
         axs4[0].plot(Xtest[:,1],Yscaler.inverse_transform(Ytest),'o',markersize = 4,color = 'g')
         axs4[0].plot(Xtest[:,1],Yout_test,'*',markersize = 4,color = 'orange')
@@ -354,7 +354,7 @@ if __name__ == "__main__":
         
         plt.rc('font', size=14) 
         fig5,axs5 = plt.subplots(1,2,figsize = (16,8))
-        plt.setp(axs5[0], title = 'Dependence vs. wind shear', xlabel = 'Wind shear exponent [-]',ylabel = 'Blade root flapwise moment $M_x$')
+        plt.setp(axs5[0], title = 'Dependence vs. wind shear', xlabel = 'Wind shear exponent [-]',ylabel = 'Blade root flapwise moment $M_x$ [Nm]')
         plt.setp(axs5[1], title = 'Correlation (y-y) plot', xlabel = 'Input data',ylabel = 'Model predictions')
         axs5[0].plot(Xtest[:,2],Yscaler.inverse_transform(Ytest),'o',markersize = 4,color = 'r')
         axs5[0].plot(Xtest[:,2],Yout_test,'*',markersize = 4,color = 'blue')
