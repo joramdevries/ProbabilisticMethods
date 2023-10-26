@@ -311,7 +311,7 @@ if __name__ == "__main__":
         Ytest = Yscaler.transform(AllTargetData['Tower_base_fore_aft_M_x'].values[int(N*TrainTestRatio):].reshape(-1,1))
         
         
-        ANNmodel.set_params(learning_rate_init = 0.01, activation = 'relu',tol = 1e-7,n_iter_no_change = 10, hidden_layer_sizes = (12,12), validation_fraction = 0.1)
+        ANNmodel.set_params(learning_rate_init = 0.01, activation = 'relu',tol = 1e-6,n_iter_no_change = 10, hidden_layer_sizes = (12,12), validation_fraction = 0.1)
         # BEGIN CODE HERE
         ANNmodel.fit(Xtrain, Ytrain.ravel())
         
@@ -391,8 +391,8 @@ def scalers():
     
     ANNmodel.get_params()
     
-    print(AllInputData)
-    print(AllTargetData)
+    #print(AllInputData)
+    #print(AllTargetData)
     AllInputData.drop(columns = 'MannL', inplace = True)
     AllInputData.drop(columns = 'MannGamma', inplace = True)
     AllInputData.drop(columns = 'VeerDeltaPhi', inplace = True)
@@ -403,4 +403,23 @@ def scalers():
     Xscaler = Xscaler.fit(AllInputData)
     Yscaler = Yscaler.fit(AllTargetData['Tower_base_fore_aft_M_x'].values.reshape(-1, 1))
     
-    return Xscaler, Yscaler
+    TrainTestRatio = 0.8
+    N = len(AllInputData)
+    Xtrain = Xscaler.transform(AllInputData.values[:int(N*TrainTestRatio),:])
+    Xtest = Xscaler.transform(AllInputData.values[int(N*TrainTestRatio):,:])
+    
+    Ytrain = Yscaler.transform(AllTargetData['Tower_base_fore_aft_M_x'].values[:int(N*TrainTestRatio)].reshape(-1,1))
+    Ytest = Yscaler.transform(AllTargetData['Tower_base_fore_aft_M_x'].values[int(N*TrainTestRatio):].reshape(-1,1))
+    
+    
+    ANNmodel.set_params(learning_rate_init = 0.01, activation = 'relu',tol = 1e-6,n_iter_no_change = 10, hidden_layer_sizes = (12,12), validation_fraction = 0.1)
+    # BEGIN CODE HERE
+    ANNmodel.fit(Xtrain, Ytrain.ravel())
+    
+    print( 'Train set r-square: ' + str(ANNmodel.score(Xtrain,Ytrain)))
+    print( 'Test set r-square: ' + str(ANNmodel.score(Xtest,Ytest)))
+    
+    Yout = Yscaler.inverse_transform(ANNmodel.predict(Xtrain).reshape(-1, 1))
+    Yout_test = Yscaler.inverse_transform(ANNmodel.predict(Xtest).reshape(-1, 1))
+    
+    return Yout, Yout_test

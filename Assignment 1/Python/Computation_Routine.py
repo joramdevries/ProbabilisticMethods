@@ -18,6 +18,8 @@ from scipy.stats import truncnorm
 
 from datetime import datetime, timedelta
 
+import warnings
+
 #from Bootstrap import bootstrap_function
 #from Joint_Distribution_Fit import Weibull_parameters
 #from Surrogate_Model import scalers
@@ -25,6 +27,11 @@ from datetime import datetime, timedelta
 import Bootstrap as BS
 import Joint_Distribution_Fit as JDF
 import Surrogate_Model as SM
+
+# %% FILTER WARNINGS
+
+# Suppress all warnings
+warnings.filterwarnings("ignore")
 
 # %% IMPORT DATA
 
@@ -96,15 +103,10 @@ def get_alpha(U):
     return sample
 
 def get_Mx(input_data):
+        
+    Yout, Yout_test = SM.scalers()
     
-    ANNmodel = nn.MLPRegressor()
-    
-    Xscaler, Yscaler = SM.scalers()
-    
-    pred_scaled = ANNmodel.predict(Xscaler.transform(input_data))
-    Mx = Yscaler.inverse_transform(pred_scaled.reshape(-1, 1)).ravel()
-    
-    return Mx
+    return Yout
 
 
 # %% PRE MADE FUNCTIONS
@@ -136,9 +138,6 @@ MuSigmaFunc = lambda u: pMu[0]*u**2 + pMu[1]*u + pMu[2]
 
 # %% START ROUTINE
 
-# Set Number of Monte Carlo
-
-N_MC = 10**4
 
 # Running Joint Distribution Fit
 print("----------------------------------------------------------------------")
@@ -165,7 +164,10 @@ delta = [1,0.3]
 X_m = [1,0.2]# Loads model uncertainty (you get this from Part3)
 #X_W = [1,user_defined]# Uncertainty in wind conditions (you get this from Part2)
 
-N = 10**4 # User-defined
+
+# Set Number of Monte Carlo
+N_MC = 10**4
+
 k = 4 * 10**12 # Fatigue strength normalization factor (?)
 m = 3 # Fatigue S-N curve slope (?)
 
@@ -177,7 +179,7 @@ g = np.zeros(X_W.shape)
 
 N_st = 200  #N short term (100-200)
 
-iterations = N
+#iterations = N_st
 
 now = datetime.now()
 
@@ -186,9 +188,10 @@ start_time_str = now.strftime("%H:%M:%S")
 start_time = datetime.strptime(start_time_str, "%H:%M:%S")
 
 print("Start of Computation Routine: ", start_time_str)
-
-for i in range(iterations):
+print("======================================================================")
+for i in range(N_st):
     
+    print("i = ", i)
     U_routine = stats.weibull_min.ppf(np.random.rand(N_MC), loc = N_st, 
                                       scale = A_weibull*X_W[i], c = k_weibull)
     
@@ -206,9 +209,12 @@ for i in range(iterations):
     
     M_x = get_Mx(routine_df)
     
-    g = Delta[i] - ( 1 / (N_st*k) ) * sum(X_M[i]*M_x)
+    g[i] = Delta[i] - ( 1 / (N_st*k) ) * sum( (X_M[i]*M_x)**m )
     
+    print("current g = ", g[i])
+    print("======================================================================")
 
+print("g = ", g)
 
 now = datetime.now()
 
