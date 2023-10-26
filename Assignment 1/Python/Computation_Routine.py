@@ -554,3 +554,9 @@ axs1.plot(betaQMChist[:100000], label = 'Quasi MC')
 axs1.legend()
 plt.savefig(cur + '\\res\\crude_vs_quasi_MC.eps')
 plt.show()
+
+
+
+
+# %% IMPORTANCE SAMPLING
+
