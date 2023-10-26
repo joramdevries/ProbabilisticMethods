@@ -41,13 +41,47 @@ def Weibull_parameters(WindData):
     
     return WeibullA, Weibullk
 
+# Helper function - Normal distribution -> first variable is the mean, next one is the std_dev
+def NormalDist(task,x,mu=0,sigma=1):
+    import numpy as np
+    if task == 0: # PDF
+        y = (1.0/(sigma*np.sqrt(2.0*np.pi)))*np.exp(-((x - mu)**2)/(2.0*(sigma**2)))
+    elif task == 1: # Cumulative
+        from scipy.special import erf
+        y = 0.5*(1.0 + erf((x - mu)/(sigma*np.sqrt(2))))
+    elif task == 2: # Inverse
+        from scipy.special import erfinv
+        y = mu + sigma*np.sqrt(2)*erfinv(2*x - 1)        
+    return y
+
+# JUST A Helper function - lognormal distribution -> this implementation makes it a function of the variable mean and the std_dev
+def LogNormDist(task,x,mu,sigma):
+    import numpy as np
+    tol = 1e-16
+    mu = np.asarray(mu)
+    mu[mu<tol] = tol
+    Eps   = np.sqrt(np.log( 1.0+(sigma/mu)**2 ) ) #-> getting the true functions
+    Ksi   = np.log(mu)-0.5*Eps**2
+    if task == 0: # PDF
+        x[x<=0] = 1e-8
+        u =(np.log(x)-Ksi)/Eps
+        y = np.exp(-u*u/2.0)/(Eps*x*np.sqrt(2.0*np.pi))
+    elif task == 1: # Cummulative
+        x[x<=0] = 1e-8
+        u =(np.log(x)-Ksi)/Eps
+        y= NormalDist(1, u)
+    elif task == 2: # Inverse
+        y= np.exp(Ksi+Eps*NormalDist(2, x))
+    
+    return y
+
 # %% main
 if __name__ == "__main__":
     cur = os.getcwd()
     
     #%% PLOT SELECTION
     
-    mean_sigma_plot = True
+    mean_sigma_plot = False
     binned_plot = True
     turbulence_plot = True
     monte_carlo_plot = True
@@ -69,6 +103,8 @@ if __name__ == "__main__":
     filtered_WindData.to_csv(filtered_csv_file, index=False)
     
     WindData = filtered_WindData
+    
+    WindData["SigmaU"] = WindData['Wsp']*WindData['TI']
     
     # %% FUNCTIONS
     
@@ -117,7 +153,7 @@ if __name__ == "__main__":
         print(mean_winddata)
         print("--------------------------------")
         print(WindData['Wsp'])
-        WindData["SigmaU"] = WindData['Wsp']*WindData['TI']
+        #WindData["SigmaU"] = WindData['Wsp']*WindData['TI']
         print("--------------------------------")
         
         print(WindData["SigmaU"])

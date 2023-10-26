@@ -71,11 +71,11 @@ def bootstrap_function(WindData, Nbootstrap, plots):
         
         year_wsp_mean = np.mean(random_year['Wsp'])
         
-        s = np.random.normal(year_wsp_mean, year_wsp_mean*0.01, 1000)
+        #s = np.random.normal(year_wsp_mean, year_wsp_mean*0.01, 1000)
         
-        Bsample_final = np.random.choice(s)
+        #Bsample_final = np.random.choice(s)
         
-        BootstrapSample[n] = Bsample_final
+        BootstrapSample[n] = year_wsp_mean #Bsample_final
         
     print("DONE!!")
     
@@ -146,8 +146,11 @@ def bootstrap_function(WindData, Nbootstrap, plots):
     mean_of_sample = BootstrapMeans.mean()
     print("mean_of_sample: ", mean_of_sample)
     std_of_sample = BootstrapMeans.std()
+    
+    new_std = np.sqrt(std_of_sample**2 + 0.01**2 + 0.01**2)
     print("std_of_sample: ", std_of_sample)
-    X_w = [mean_of_sample/mean_of_sample, std_of_sample/mean_of_sample]
+    print("new_std: ", new_std)
+    X_w = [mean_of_sample/mean_of_sample, new_std/mean_of_sample]
     print("X_w: ", X_w)
     print("+++++++++++++++++++++++++++++++++++++++++++++")
     # Calculate duration

@@ -84,7 +84,7 @@ nsamples = AllInputData['U'].count() # Find the total number of data points in t
 FeatureNames = AllInputData.columns.values
 DependentVariableNames = AllTargetData.columns.values
 
-Y1 = AllTargetData['Tower_base_fore_aft_M_x']
+Y1 = AllTargetData['Blade_root_flapwise_M_x']
 
 ANNmodel = nn.MLPRegressor()
 
@@ -137,32 +137,38 @@ def train_surrogate_model(AllInputData, AllTargetData):
         
     Xtrain, Xtest, Ytrain, Ytest, Yscaler = SM.scalers(AllInputData, AllTargetData)
     
-    return Xtrain, Xtest, Ytrain, Ytest, Yscaler
+    return ANNmodel
 
-def get_Mx(AllTargetData, input_data, Xscaler, Yscaler):
+def get_Mx(AllTargetData, input_data, Xscaler, Yscaler, ANNmodel):
     
-    ANNmodel = nn.MLPRegressor()
+    #ANNmodel = nn.MLPRegressor()
     
     #ANNmodel.set_params(learning_rate_init = 0.01, activation = 'relu',tol = 1e-6,n_iter_no_change = 10, hidden_layer_sizes = (12,12), validation_fraction = 0.1)
 
-    Xtrain = Xscaler.transform(input_data)
+    #Xtrain = Xscaler.transform(input_data)
     
-    print(Xtrain.shape)
+    #print(Xtrain.shape)
     
-    N_x = len(Xtrain)
-    print(N_x)
+    #N_x = len(Xtrain)
+    #print(N_x)
     
-    Ytrain = Yscaler.transform(AllTargetData['Tower_base_fore_aft_M_x'].values.reshape(-1,1))
+    #Ytrain = Yscaler.transform(AllTargetData['Blade_root_flapwise_M_x'].values.reshape(-1,1))
     
-    print(Ytrain.shape)
+    #print(Ytrain.shape)
     
-    Xtrain = Xtrain[:Ytrain.shape]
+    #Xtrain = Xtrain[:Ytrain.shape]
     
-    ANNmodel.set_params(learning_rate_init = 0.01, activation = 'relu',tol = 1e-6,n_iter_no_change = 10, hidden_layer_sizes = (12,12), validation_fraction = 0.1)
+    #ANNmodel.set_params(learning_rate_init = 0.01, activation = 'relu',tol = 1e-6,n_iter_no_change = 10, hidden_layer_sizes = (12,12), validation_fraction = 0.1)
     
-    ANNmodel.fit(Xtrain, Ytrain.ravel())
+    #ANNmodel.fit(Xtrain, Ytrain.ravel())
     
-    Mx = Yscaler.inverse_transform(ANNmodel.predict(Xtrain).reshape(-1, 1)).ravel()
+    #np.atleast_2d
+    
+    X_scaled = Xscaler.transform(input_data)
+    
+    Mx_scaled = ANNmodel.predict(X_scaled)
+    
+    Mx = Yscaler.inverse_transform(Mx_scaled.reshape(-1, 1)).ravel()
     
     return Mx
 
@@ -193,6 +199,15 @@ pMu = np.polyfit(Mudatax,Mudatay,2)
 SigmaSigmaRef = np.mean(SigmaSigmaBinned)
         
 MuSigmaFunc = lambda u: pMu[0]*u**2 + pMu[1]*u + pMu[2]
+SigmaSigmaFunc = lambda u: SigmaSigmaRef*np.ones(len(u))
+
+SigmaU = lambda u, F: JDF.LogNormDist(2,F,MuSigmaFunc(u),SigmaSigmaFunc(u))
+
+
+MuAlphaFunc = lambda u: 0.1*np.ones(len(u))
+SigmaAlphaFunc = lambda u: np.min(np.concatenate([[np.ones(len(u))],[1/u]]), axis=0)
+
+Alpha = lambda u, F: JDF.NormalDist(2,F,MuAlphaFunc(u),SigmaAlphaFunc(u))
 
 # %% START ROUTINE
 
@@ -226,12 +241,12 @@ X_m = [1,0.2]# Loads model uncertainty (you get this from Part3)
 # Set Number of Monte Carlo
 N_MC = 10**4
 
-k = 4 * 10**12 # Fatigue strength normalization factor (?)
+k = 4.0e12 #4 * 10**12 # Fatigue strength normalization factor (?)
 m = 3 # Fatigue S-N curve slope (?)
 
 Delta = stats.lognorm.ppf(np.random.rand(N_MC), s= delta[0], scale = delta[1])
-X_M = stats.norm.ppf(np.random.rand(N_MC), loc = X_w[0], scale = X_w[1])
-X_W = stats.norm.ppf(np.random.rand(N_MC), loc = X_m[0], scale = X_m[1])
+X_W = stats.norm.ppf(np.random.rand(N_MC), loc = X_w[0], scale = X_w[1])
+X_M = stats.norm.ppf(np.random.rand(N_MC), loc = X_m[0], scale = X_m[1])
 
 g = np.zeros(X_W.shape)
 
@@ -250,36 +265,46 @@ print("======================================================================")
 
 #Xtrain, Xtest, Ytrain, Ytest, Yscaler = train_surrogate_model(AllInputData, AllTargetData)
 
-Xscaler, Yscaler = SM.scalers(AllInputData, AllTargetData)
+#Xscaler, Yscaler = SM.scalers(AllInputData, AllTargetData)
+
+ANNmodel, Xscaler, Yscaler = SM.training(AllInputData, AllTargetData)
  
 for i in range(N_MC):
     
-    print("i = ", i)
-    U_routine = stats.weibull_min.ppf(np.random.rand(N_MC), loc = N_st, 
+    #print("i = ", i)
+    U_routine = stats.weibull_min.ppf(np.random.rand(N_st), loc = 0, 
                                       scale = A_weibull*X_W[i], c = k_weibull)
     
     #random.weibull(U, N_st, scale = A_weibull*X_W[i],
     #                           c = k_weibull)
     
-    SigmaU_routine = MuSigmaFunc(U_routine)
+    SigmaU_routine = SigmaU(U_routine,np.random.rand(N_st))
     
-    Alpha_routine = get_alpha(U_routine)
+    Alpha_routine = Alpha(U_routine,np.random.rand(N_st))
     
-    routine_df = pd.DataFrame({'U': U_routine, 
-                           'SigmaU': SigmaU_routine,
-                           'Alpha' : Alpha_routine
-                          })
+# =============================================================================
+#     routine_df = pd.DataFrame({'U': U_routine, 
+#                            'SigmaU': SigmaU_routine,
+#                            'Alpha' : Alpha_routine
+#                           })
+# =============================================================================
+    
+    routine_array = np.column_stack((U_routine,SigmaU_routine,Alpha_routine))
+    
+    #put in an array instead of dataframe
     
     #Mx_new = insert routine_df in Surrogate model
-    M_x = get_Mx(AllTargetData, routine_df, Xscaler, Yscaler)
+    M_x = get_Mx(AllTargetData, routine_array, Xscaler, Yscaler, ANNmodel)
+    
+    #don't do in function
     
     #M_x = get_Mx(routine_df, AllInputData, AllTargetData)
+    #print("M_x = ", M_x)
+    g[i] = Delta[i] - ( 1 / (N_st*k) ) * np.sum( (X_M[i]*M_x)**m )
     
-    g[i] = Delta[i] - ( 1 / (N_st*k) ) * sum( (X_M[i]*M_x)**m )
-    
-    print("current g = ", g[i])
+    #print("current g = ", g[i])
     print("======================================================================")
-
+    #break
 print("g = ", g)
 
 
@@ -311,7 +336,7 @@ print("+++++++++++++++++++++++++++++++++++++++++++++")
 # 
 # =============================================================================
 
-PoF = sum(g<=0)/N_MC
+PoF = np.sum(g<=0)/N_MC
 beta = JDF.NormalDist(2,PoF)
 
 
