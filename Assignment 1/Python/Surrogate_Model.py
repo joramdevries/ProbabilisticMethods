@@ -335,7 +335,8 @@ if __name__ == "__main__":
         axs3[1].plot(np.array([np.min(AllTargetData['Blade_root_flapwise_M_x']), np.max(AllTargetData['Blade_root_flapwise_M_x'])]),\
                      np.array([np.min(AllTargetData['Blade_root_flapwise_M_x']), np.max(AllTargetData['Blade_root_flapwise_M_x'])]),'-y', linewidth =3)
         axs3[1].legend(['Point-to-point comparisons','1:1 relation'])
-        plt.tight_layout()             
+        plt.tight_layout()
+        plt.savefig(cur + '\\res\\training_1.eps')              
         plt.show()
         
         plt.rc('font', size=14) 
@@ -349,7 +350,8 @@ if __name__ == "__main__":
         axs4[1].plot(np.array([np.min(AllTargetData['Blade_root_flapwise_M_x']), np.max(AllTargetData['Blade_root_flapwise_M_x'])]),\
                      np.array([np.min(AllTargetData['Blade_root_flapwise_M_x']), np.max(AllTargetData['Blade_root_flapwise_M_x'])]),'-g', linewidth =3)
         axs4[1].legend(['Point-to-point comparisons','1:1 relation'])
-        plt.tight_layout()             
+        plt.tight_layout() 
+        plt.savefig(cur + '\\res\\training_2.eps')             
         plt.show()
         
         plt.rc('font', size=14) 
@@ -363,7 +365,8 @@ if __name__ == "__main__":
         axs5[1].plot(np.array([np.min(AllTargetData['Blade_root_flapwise_M_x']), np.max(AllTargetData['Blade_root_flapwise_M_x'])]),\
                      np.array([np.min(AllTargetData['Blade_root_flapwise_M_x']), np.max(AllTargetData['Blade_root_flapwise_M_x'])]),'-r', linewidth =3)
         axs5[1].legend(['Point-to-point comparisons','1:1 relation'])
-        plt.tight_layout()             
+        plt.tight_layout()
+        plt.savefig(cur + '\\res\\training_3.eps')              
         plt.show()
     
 def scalers(AllInputData, AllTargetData):
