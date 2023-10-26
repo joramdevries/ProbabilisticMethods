@@ -297,7 +297,7 @@ if __name__ == "__main__":
     fig1, ax1 = plt.subplots()
     p11 = ax1.plot(Ubins,pdf_N,'--r', label = 'Normal')
     p12 = ax1.plot(Ubins,pdf_B,'-b', label = 'Bootstrapping')
-    p13 = ax1.plot(Ubins,pdf_T,'-k', label = 'T-dist')
+    #p13 = ax1.plot(Ubins,pdf_T,'-k', label = 'T-dist')
     plt.xlabel('Annual mean wind speed [m/s]')
     plt.ylabel('Probability density')
     plt.legend()
