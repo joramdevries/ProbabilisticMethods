@@ -71,6 +71,12 @@ def bootstrap_function(WindData, Nbootstrap, plots):
         
         year_wsp_mean = np.mean(random_year['Wsp'])
         
+
+        #print("random_year: ", random_year["Timestamp"])
+        #print("year_wsp_mean: ", year_wsp_mean)
+        #print("-------------------------------------------------------------")   
+        
+        
         #s = np.random.normal(year_wsp_mean, year_wsp_mean*0.01, 1000)
         
         #Bsample_final = np.random.choice(s)
@@ -124,7 +130,7 @@ def bootstrap_function(WindData, Nbootstrap, plots):
 
     Rlow = int((Nbootstrap+1) * (alpha/2) )
     #print(Rlow)
-    Rhigh = int((Nbootstrap+1) * ((1-alpha)/2))
+    Rhigh = int((Nbootstrap+1) * (1-(alpha/2)))
     #print(Rhigh)
 
     CIn_B = BootstrapMeans[Rlow]
@@ -216,15 +222,22 @@ if __name__ == "__main__":
     
     BootstrapMeans, BootstrapSample, X_w = bootstrap_function(WindData, Nbootstrap, plots)
     
-    Rlow = int((Nbootstrap+1) * (alpha/2) )
+    #Rlow = int((Nbootstrap+1) * (alpha/2) )
     #print(Rlow)
-    Rhigh = int((Nbootstrap+1) * ((1-alpha)/2))
+    #Rhigh = int((Nbootstrap+1) * ((1-alpha)/2))
     #print(Rhigh)
     
+    #CIn_B = BootstrapMeans[Rlow]
+    #CIp_B = BootstrapMeans[Rhigh]
+    
+    n_bootstrap_samples = len(BootstrapMeans)
+    Rlow = int(n_bootstrap_samples * alpha / 2)
+    Rhigh = int(n_bootstrap_samples * (1 - alpha / 2))
     CIn_B = BootstrapMeans[Rlow]
     CIp_B = BootstrapMeans[Rhigh]
     
-    
+    print(Rlow)
+    print(Rhigh)
     print('Confidence interval based on bootstrapping: [' + str(CIn_B) + ', ' + str(CIp_B) + ']')
     
     
@@ -305,3 +318,103 @@ if __name__ == "__main__":
     plt.savefig(cur + '\\res\\Normal_vs_Bootstrap_Probability_Density_withT.eps')
     
     plt.show()
+    
+    #%% PLOT EXTRA
+    
+    fig1, ax1 = plt.subplots(1,2)
+    ax1[0].plot(Ubins, pdf_N, '--r', label='Normal')
+    ax1[0].plot(Ubins, pdf_B, '-b', label='Bootstrapping')
+    ax1[0].set_xlabel('Annual mean wind speed [m/s]')
+    ax1[0].set_ylabel('Probability density')
+    ax1[0].legend()
+    
+    ax1[1].hist(BootstrapMeans, 100, label='Bootstrapping')
+    ax1[1].set_xlabel('Annual mean wind speed [m/s]')
+    ax1[1].set_ylabel('Frequency')
+    plt.show()
+    
+    
+    
+    
+    # %% YEAR MEANS PLTS
+    
+    WindData['Year'] = WindData['Timestamp'].dt.year
+    
+    years = ["2004","2005","2006","2007","2008","2009","2010","2011","2012","2013"]
+    
+    U_YMP = np.zeros(len(years))
+    
+    for y in range(len(years)):
+        
+        Winddata_1_year = WindData[WindData['Year'] == int(years[y])]
+        
+        U_YMP[y] = np.mean(Winddata_1_year['Wsp'])
+        
+    #U = [8.97, 8.56, 9.11, 8.79, 8.27, 8.40, 9.56, 8.02]
+    
+    U_YMP_mean = np.mean(U_YMP)
+    U__YMP_std = np.std(U_YMP)
+    
+    alpha =  1 - 0.95# Corresponding to 95% probability  ( alpha = 1-p)
+    
+    n = len(U_YMP) # Count the number of samples
+
+    Nbootstrap = 10000
+    BootstrapSize = len(U_YMP)
+    
+    Bsample = np.random.choice(U_YMP, size = (BootstrapSize,Nbootstrap))
+    BootstrapMeans = np.sort(Bsample.mean(0))
+    print(np.shape(BootstrapMeans))
+    print(Bsample.mean(0))
+    
+    Rlow = int(np.around(Nbootstrap*alpha/2))
+    Rhigh = int(np.around((1-alpha/2)*Nbootstrap))
+    
+    CIn_B = BootstrapMeans[Rlow]
+    CIp_B = BootstrapMeans[Rhigh]
+    
+    print('Confidence interval based on bootstrapping: [' + str(CIn_B) + ', ' + str(CIp_B) + ']')
+    
+    #%% PLOT EXTRA
+    
+    Ubins = np.linspace(7.5,12,100)
+    
+    pdf_N = stats.norm.pdf(Ubins,U_YMP_mean,U__YMP_std/np.sqrt(n))
+    dU = Ubins[1]-Ubins[0] # Scaling factor for the t-pdf to make sure we get a valid pdf for every bin spacing
+    pdf_T = (1/np.sqrt(dU))*stats.t.pdf((Ubins - U_YMP_mean)/(U__YMP_std/np.sqrt(n)), n - 1)
+    
+    # Generating an empirical pdf from the bootstrap sample
+    BootstrapHist = np.histogram(BootstrapMeans,bins = Ubins)
+    
+    #plt.hist(BootstrapMeans,bins = Ubins) 
+    
+    BootstrapDist = stats.rv_histogram(BootstrapHist)
+    pdf_B = BootstrapDist.pdf(Ubins)
+    
+    fig1, ax1 = plt.subplots(1,2)
+    ax1[0].plot(Ubins, pdf_N, '--r', label='Normal')
+    ax1[0].plot(Ubins, pdf_B, '-b', label='Bootstrapping')
+    ax1[0].set_xlabel('Annual mean wind speed [m/s]')
+    ax1[0].set_ylabel('Probability density')
+    ax1[0].legend()
+    
+    ax1[1].hist(BootstrapMeans, 100, label='Bootstrapping')
+    ax1[1].set_xlabel('Annual mean wind speed [m/s]')
+    ax1[1].set_ylabel('Frequency')
+    
+    plt.savefig(cur + '\\res\\correct_Bootstrap.eps')
+    
+    plt.show()
+    
+    
+    print("+++++++++++++++++++++++++++++++++++++++++++++")
+    mean_of_sample = BootstrapMeans.mean()
+    print("mean_of_sample: ", mean_of_sample)
+    std_of_sample = BootstrapMeans.std()
+    
+    new_std = np.sqrt((std_of_sample/mean_of_sample)**2 + 0.01**2 + 0.01**2)
+    print("std_of_sample: ", std_of_sample)
+    print("new_std: ", new_std)
+    X_w = [mean_of_sample/mean_of_sample, new_std]
+    print("X_w: ", X_w)
+    print("+++++++++++++++++++++++++++++++++++++++++++++")
