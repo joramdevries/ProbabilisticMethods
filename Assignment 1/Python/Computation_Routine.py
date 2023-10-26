@@ -244,9 +244,18 @@ N_MC = 10**4
 k = 4.0e12 #4 * 10**12 # Fatigue strength normalization factor (?)
 m = 3 # Fatigue S-N curve slope (?)
 
-Delta = stats.lognorm.ppf(np.random.rand(N_MC), s= delta[0], scale = delta[1])
-X_W = stats.norm.ppf(np.random.rand(N_MC), loc = X_w[0], scale = X_w[1])
-X_M = stats.norm.ppf(np.random.rand(N_MC), loc = X_m[0], scale = X_m[1])
+#Delta = stats.lognorm.ppf(np.random.rand(N_MC), s= delta[0], scale = delta[1])
+
+Delta = JDF.LogNormDist(2, np.random.rand(N_MC), delta[0], delta[1])
+
+#X_W = stats.norm.ppf(np.random.rand(N_MC), loc = X_w[0], scale = X_w[1])
+
+X_W = JDF.NormalDist(2, np.random.rand(N_MC), X_w[0], X_w[1])
+
+#X_M = stats.norm.ppf(np.random.rand(N_MC), loc = X_m[0], scale = X_m[1])
+
+X_M = JDF.NormalDist(2, np.random.rand(N_MC), X_m[0], X_m[1])
+
 
 g = np.zeros(X_W.shape)
 
@@ -303,10 +312,9 @@ for i in range(N_MC):
     g[i] = Delta[i] - ( 1 / (N_st*k) ) * np.sum( (X_M[i]*M_x)**m )
     
     #print("current g = ", g[i])
-    print("======================================================================")
+    #print("======================================================================")
     #break
 print("g = ", g)
-
 
 # %% now calculate probability of failure sum(G<= 0)/NMC
 # beta = -normaldist(2,P)
@@ -336,9 +344,25 @@ print("+++++++++++++++++++++++++++++++++++++++++++++")
 # 
 # =============================================================================
 
-PoF = np.sum(g<=0)/N_MC
+Nfail = np.sum(g <= 0)
+
+PoF = Nfail/N_MC
 beta = JDF.NormalDist(2,PoF)
+
+beta_MC = stats.norm.ppf(1 - PoF)
 
 
 print("Probability of Failure = ", PoF)
-print("Beta of Failure = ", beta)
+print("Reliability index = ", beta_MC)
+print("Number of failure events observed = ", Nfail)
+
+# Plot failure surface based on MC results
+
+fig0,axs0 = plt.subplots(figsize = (5,5))
+#axs0.plot(Delta,X_M)
+axs0.plot(Delta[g > 0],X_M[g >0],'*b')
+axs0.plot(Delta[g <= 0],X_M[g <=0],'*r')
+axs0.set_xlabel('$Delta$')
+axs0.set_ylabel('$X_M$')
+plt.show()
+
