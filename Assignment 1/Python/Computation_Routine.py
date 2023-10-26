@@ -420,7 +420,7 @@ start_time_str = now.strftime("%H:%M:%S")
 
 start_time = datetime.strptime(start_time_str, "%H:%M:%S")
 
-print("Start of Computation Routine: ", start_time_str)
+print("Start of Quasi Computation Routine: ", start_time_str)
 print("======================================================================")
 
 #Xtrain, Xtest, Ytrain, Ytest, Yscaler = train_surrogate_model(AllInputData, AllTargetData)
@@ -479,7 +479,7 @@ end_time_str = now.strftime("%H:%M:%S")
 
 end_time = datetime.strptime(end_time_str, "%H:%M:%S")
     
-print("End of Computation Routine: ", end_time_str)
+print("End of Quasi Computation Routine: ", end_time_str)
 
 print("+++++++++++++++++++++++++++++++++++++++++++++")
 
@@ -559,4 +559,100 @@ plt.show()
 
 
 # %% IMPORTANCE SAMPLING
+
+# Importance Sampling Parameters
+shift_factor = 1.03  # Adjust the shift factor based on your problem
+
+g_MC_IS = np.zeros(X_W.shape)
+
+#iterations = N_st
+
+now = datetime.now()
+
+start_time_str = now.strftime("%H:%M:%S")
+
+start_time = datetime.strptime(start_time_str, "%H:%M:%S")
+
+print("Start of Importance Sampling Crude Computation Routine: ", start_time_str)
+print("======================================================================")
+
+
+for i in range(N_MC):
+    # Shift the sample closer to the limit state
+    U_routine = stats.weibull_min.ppf(np.random.rand(N_st), loc=0, scale=A_weibull * X_W[i], c=k_weibull)
+
+    # Apply the shift factor for importance sampling
+    U_routine_shifted = U_routine - shift_factor * (U_routine - Delta[i])
+
+    SigmaU_routine = SigmaU(U_routine_shifted, np.random.rand(N_st))
+    Alpha_routine = Alpha(U_routine_shifted, np.random.rand(N_st))
+
+    routine_array = np.column_stack((U_routine_shifted, SigmaU_routine, Alpha_routine))
+
+    M_x = get_Mx(AllTargetData, routine_array, Xscaler, Yscaler, ANNmodel)
+
+    g_MC_IS[i] = Delta[i] - (1 / (N_st * k)) * np.sum((X_M[i] * M_x)**m)
+
+
+print("g_MC_IS = ", g_MC_IS)
+
+# %% now calculate probability of failure sum(G<= 0)/NMC
+# beta = -normaldist(2,P)
+
+now = datetime.now()
+
+end_time_str = now.strftime("%H:%M:%S")
+
+end_time = datetime.strptime(end_time_str, "%H:%M:%S")
+    
+print("End of Crude IS Computation Routine: ", end_time_str)
+
+print("+++++++++++++++++++++++++++++++++++++++++++++")
+
+Nfail_IS_C = np.sum(g_MC_IS <= 0)
+
+PoF_IS_C = Nfail_IS_C/N_MC
+
+beta_IS_C = stats.norm.ppf(1 - PoF_IS_C)
+
+
+print("Probability of Failure = ", PoF_IS_C)
+print("Reliability index = ", beta_IS_C)
+print("Number of failure events observed = ", Nfail_IS_C)
+
+# Plot failure surface based on QMC results
+
+
+# Subplot 1
+fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+
+axs[0].plot(Delta[g_MC_IS > 0],X_M[g_MC_IS >0],'*b')
+axs[0].plot(Delta[g_MC_IS <= 0],X_M[g_MC_IS <=0],'*r')
+axs[0].set_xlabel('$\Delta$')
+axs[0].set_ylabel('$X_M$')
+#axs[0].set_title('Subplot 1')
+
+# Subplot 2
+axs[1].plot(Delta[g_MC_IS > 0], X_W[g_MC_IS > 0], '*b')
+axs[1].plot(Delta[g_MC_IS <= 0], X_W[g_MC_IS <= 0], '*r')
+axs[1].set_xlabel('$\Delta$')
+axs[1].set_ylabel('$X_W$')
+#axs[1].set_title('Subplot 2')
+
+# Subplot 3
+axs[2].plot(X_W[g_MC_IS > 0], X_M[g_MC_IS > 0], '*b')
+axs[2].plot(X_W[g_MC_IS <= 0], X_M[g_MC_IS <= 0], '*r')
+axs[2].set_xlabel('$X_W$')
+axs[2].set_ylabel('$X_M$')
+#axs[2].set_title('Subplot 3')
+
+plt.suptitle('Importance Sampling: Crude Monte Carlo', fontsize=16, y=1.02)  # Adjust fontsize and y as needed
+
+plt.tight_layout()
+plt.savefig(cur + '\\res\\imp_sampling_crude_monte_carlo.eps')
+plt.show()
+
+
+
+
 
