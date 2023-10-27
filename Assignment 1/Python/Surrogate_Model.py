@@ -193,10 +193,15 @@ if __name__ == "__main__":
         
             Ypred_O3 = PredictPolyO3(AllInputData.values, Alsq)
             # END CODE HERE
+            
+            if DependentVariableNames[i] == 'Blade_root_flapwise_M_x':
+                y_label_for_u = 'Blade root flapwise moment $M_x$ [Nm]'
+            else:
+                y_label_for_u = f'{DependentVariableNames[i]}'
         
             plt.rc('font', size=14) 
             fig2a,axs2a = plt.subplots(1,2,figsize = (16,8))
-            plt.setp(axs2a[0], title = 'Dependence vs. wind speed', xlabel = 'Mean wind speed [m/s]',ylabel = f'{DependentVariableNames[i]}')
+            plt.setp(axs2a[0], title = 'Dependence vs. wind speed', xlabel = 'Mean wind speed [m/s]',ylabel = y_label_for_u)
             plt.setp(axs2a[1], title = 'Correlation (y-y) plot', xlabel = 'Input data',ylabel = 'Model predictions')
             axs2a[0].plot(AllInputData['U'],AllTargetData[DependentVariableNames[i]],'o',markersize = 4,color = 'y')
             axs2a[0].plot(AllInputData['U'],Ypred_O3,'x',markersize = 4,color = 'purple')
@@ -206,7 +211,7 @@ if __name__ == "__main__":
                          np.array([np.min(AllTargetData[DependentVariableNames[i]]), np.max(AllTargetData[DependentVariableNames[i]])]),'-y',linewidth = 4)
             axs2a[1].legend(['Point-to-point comparisons','1:1 relation'])
             plt.tight_layout()  
-            plt.savefig(cur + '\\res\\Surrogate_model_U_2.eps')           
+            plt.savefig(cur + f'\\res\\Surrogate_model_U_2_{i}.eps')           
             plt.show()
             
             
@@ -243,7 +248,7 @@ if __name__ == "__main__":
                          np.array([np.min(AllTargetData[DependentVariableNames[i]]), np.max(AllTargetData[DependentVariableNames[i]])]),'-g',linewidth = 4)
             axs2a[1].legend(['Point-to-point comparisons','1:1 relation'])
             plt.tight_layout()  
-            plt.savefig(cur + '\\res\\Surrogate_model_sigma_2.eps')           
+            plt.savefig(cur + f'\\res\\Surrogate_model_sigma_2_{i}.eps')           
             plt.show()
             
         #%% PLOTTING SHEAR
@@ -279,7 +284,7 @@ if __name__ == "__main__":
                          np.array([np.min(AllTargetData[DependentVariableNames[i]]), np.max(AllTargetData[DependentVariableNames[i]])]),'-r', linewidth = 4)
             axs2a[1].legend(['Point-to-point comparisons','1:1 relation'])
             plt.tight_layout() 
-            plt.savefig(cur + '\\res\\Surrogate_model_shear_2.eps')            
+            plt.savefig(cur + f'\\res\\Surrogate_model_shear_2_{i}.eps')            
             plt.show()
         
       
