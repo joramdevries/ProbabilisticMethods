@@ -596,7 +596,7 @@ for i in range(N_MC):
 
 print("g_MC_IS = ", g_MC_IS)
 
-# %% now calculate probability of failure sum(G<= 0)/NMC
+# now calculate probability of failure sum(G<= 0)/NMC
 # beta = -normaldist(2,P)
 
 now = datetime.now()
@@ -653,6 +653,97 @@ plt.savefig(cur + '\\res\\imp_sampling_crude_monte_carlo.eps')
 plt.show()
 
 
+# Importance Sampling Parameters
+shift_factor = 1.03  # Adjust the shift factor based on your problem
+
+g_QMC_IS = np.zeros(X_W_Q.shape)
+
+#iterations = N_st
+
+now = datetime.now()
+
+start_time_str = now.strftime("%H:%M:%S")
+
+start_time = datetime.strptime(start_time_str, "%H:%M:%S")
+
+print("Start of Importance Sampling Quasi Computation Routine: ", start_time_str)
+print("======================================================================")
+
+
+for i in range(N_QMC):
+    # Shift the sample closer to the limit state
+    U_routine = stats.weibull_min.ppf(np.random.rand(N_st), loc=0, scale=A_weibull * X_W_Q[i], c=k_weibull)
+
+    # Apply the shift factor for importance sampling
+    U_routine_shifted = U_routine - shift_factor * (U_routine - Delta_Q[i])
+
+    SigmaU_routine = SigmaU(U_routine_shifted, np.random.rand(N_st))
+    Alpha_routine = Alpha(U_routine_shifted, np.random.rand(N_st))
+
+    routine_array = np.column_stack((U_routine_shifted, SigmaU_routine, Alpha_routine))
+
+    M_x = get_Mx(AllTargetData, routine_array, Xscaler, Yscaler, ANNmodel)
+
+    g_QMC_IS[i] = Delta_Q[i] - (1 / (N_st * k)) * np.sum((X_M_Q[i] * M_x)**m)
+
+
+print("g_QMC_IS = ", g_QMC_IS)
+
+# now calculate probability of failure sum(G<= 0)/NMC
+# beta = -normaldist(2,P)
+
+now = datetime.now()
+
+end_time_str = now.strftime("%H:%M:%S")
+
+end_time = datetime.strptime(end_time_str, "%H:%M:%S")
+    
+print("End of Quasi IS Computation Routine: ", end_time_str)
+
+print("+++++++++++++++++++++++++++++++++++++++++++++")
+
+Nfail_IS_Q = np.sum(g_QMC_IS <= 0)
+
+PoF_IS_Q = Nfail_IS_Q/N_QMC
+
+beta_IS_Q = stats.norm.ppf(1 - PoF_IS_Q)
+
+
+print("Probability of Failure = ", PoF_IS_Q)
+print("Reliability index = ", beta_IS_Q)
+print("Number of failure events observed = ", Nfail_IS_Q)
+
+# Plot failure surface based on QMC results
+
+
+# Subplot 1
+fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+
+axs[0].plot(Delta_Q[g_QMC_IS > 0],X_M_Q[g_QMC_IS >0],'*b')
+axs[0].plot(Delta_Q[g_QMC_IS <= 0],X_M_Q[g_QMC_IS <=0],'*r')
+axs[0].set_xlabel('$\Delta$')
+axs[0].set_ylabel('$X_M$')
+#axs[0].set_title('Subplot 1')
+
+# Subplot 2
+axs[1].plot(Delta_Q[g_QMC_IS > 0], X_W_Q[g_QMC_IS > 0], '*b')
+axs[1].plot(Delta_Q[g_QMC_IS <= 0], X_W_Q[g_QMC_IS <= 0], '*r')
+axs[1].set_xlabel('$\Delta$')
+axs[1].set_ylabel('$X_W$')
+#axs[1].set_title('Subplot 2')
+
+# Subplot 3
+axs[2].plot(X_W_Q[g_QMC_IS > 0], X_M_Q[g_QMC_IS > 0], '*b')
+axs[2].plot(X_W_Q[g_QMC_IS <= 0], X_M_Q[g_QMC_IS <= 0], '*r')
+axs[2].set_xlabel('$X_W$')
+axs[2].set_ylabel('$X_M$')
+#axs[2].set_title('Subplot 3')
+
+plt.suptitle('Importance Sampling: Quasi Monte Carlo', fontsize=16, y=1.02)  # Adjust fontsize and y as needed
+
+plt.tight_layout()
+plt.savefig(cur + '\\res\\imp_sampling_quasi_monte_carlo.eps')
+plt.show()
 
 
 
