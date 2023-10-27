@@ -181,9 +181,9 @@ if __name__ == "__main__":
         # sns.set(style="whitegrid", palette="pastel")
         sns.jointplot(x=WindData['Wsp'], y=WindData['SigmaU'], kind='scatter', color='red').plot_joint(sns.kdeplot)
         plt.xlabel('Wind Speed [m/s]', fontsize=14)
-        plt.ylabel(r'$\sigma_U$', fontsize=14)
+        plt.ylabel('Turbulence [m/s]', fontsize=14)
         # plt.suptitle('Joint Plot of Wsp vs. SigmaU', fontsize=16, y=0.80)
-        plt.savefig(cur + '\\res\\Joint_plot_2_Wsp_vs_SigmaU.eps')
+        plt.savefig(cur + '\\res\\Joint_plot_2_Wsp_vs_SigmaU.jpeg')
         plt.show()
         
         
@@ -233,6 +233,8 @@ if __name__ == "__main__":
         
         pMu = np.polyfit(Mudatax,Mudatay,2)
         
+        
+        
         # lets plot the prediction in red
         plt.plot(WspBinCenters, MuSigmaBinned, "-ok")
         plt.plot(WspBinCenters, SigmaSigmaBinned, "-xb") # for turbulence this is a common assumption
@@ -247,6 +249,8 @@ if __name__ == "__main__":
         plt.plot(WspBinCenters, (pMu[0]*WspBinCenters**2 + pMu[1]*WspBinCenters + pMu[2]), '-r')
         plt.plot(WspBinCenters, np.ones(WspBinCenters.shape)*SigmaSigmaRef, '-g')# just a constant
         plt.savefig(cur + '\\res\\bin_center_plot_2.eps')
+        
+        
     # %% PLOTTING CONDITION DISTRIBUTION OF TURBULENCE 
     
     if turbulence_plot:   
@@ -288,11 +292,16 @@ if __name__ == "__main__":
         
         # plotting with newly created functions
         
-        plt.plot(WspBinCenters, MuSigmaBinned, "-ok")
-        plt.plot(WspBinCenters, SigmaSigmaBinned, "-xb") # for turbulence this is a common assumption
-        plt.plot(WspBinCenters, MuSigmaFunc(WspBinCenters), '-r')
-        plt.plot(WspBinCenters, SigmaSigmaFunc(WspBinCenters), '-g')# just a constant
+        plt.plot(WspBinCenters, MuSigmaBinned, "-ok", label = r'$\mu \sigma$')
+        plt.plot(WspBinCenters, SigmaSigmaBinned, "-xb", label = r'$\sigma \sigma$') # for turbulence this is a common assumption
+        plt.plot(WspBinCenters, MuSigmaFunc(WspBinCenters), '-r', label = r'$\mu \sigma$ Function')
+        plt.plot(WspBinCenters, SigmaSigmaFunc(WspBinCenters), '-g', label = r'$\sigma \sigma$ Function')# just a constant
+        plt.xlabel('Wind Speed [m/s]')
+        plt.ylabel('Turbulence [m/s]')
+        plt.legend()
         plt.savefig(cur + '\\res\\turb_plot.eps')
+        
+        plt.show()
     
     if monte_carlo_plot:
         NMC = 10000

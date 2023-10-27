@@ -390,7 +390,7 @@ axs[2].plot(X_W[g_MC <= 0], X_M[g_MC <= 0], '*r')
 axs[2].set_xlabel('$X_W$')
 axs[2].set_ylabel('$X_M$')
 #axs[2].set_title('Subplot 3')
-plt.suptitle('Crude Monte Carlo', fontsize=16, y=1.02)  # Adjust fontsize and y as needed
+#plt.suptitle('Crude Monte Carlo', fontsize=16, y=1.02)  # Adjust fontsize and y as needed
 
 plt.tight_layout()
 plt.savefig(cur + '\\res\\crude_monte_carlo.eps')
@@ -536,7 +536,7 @@ axs[2].set_xlabel('$X_W$')
 axs[2].set_ylabel('$X_M$')
 #axs[2].set_title('Subplot 3')
 
-plt.suptitle('Quasi Monte Carlo', fontsize=16, y=1.02)  # Adjust fontsize and y as needed
+#plt.suptitle('Quasi Monte Carlo', fontsize=16, y=1.02)  # Adjust fontsize and y as needed
 
 plt.tight_layout()
 plt.savefig(cur + '\\res\\quasi_monte_carlo.eps')
@@ -646,7 +646,7 @@ axs[2].set_xlabel('$X_W$')
 axs[2].set_ylabel('$X_M$')
 #axs[2].set_title('Subplot 3')
 
-plt.suptitle('Importance Sampling: Crude Monte Carlo', fontsize=16, y=1.02)  # Adjust fontsize and y as needed
+#plt.suptitle('Importance Sampling: Crude Monte Carlo', fontsize=16, y=1.02)  # Adjust fontsize and y as needed
 
 plt.tight_layout()
 plt.savefig(cur + '\\res\\imp_sampling_crude_monte_carlo.eps')
@@ -739,7 +739,7 @@ axs[2].set_xlabel('$X_W$')
 axs[2].set_ylabel('$X_M$')
 #axs[2].set_title('Subplot 3')
 
-plt.suptitle('Importance Sampling: Quasi Monte Carlo', fontsize=16, y=1.02)  # Adjust fontsize and y as needed
+#plt.suptitle('Importance Sampling: Quasi Monte Carlo', fontsize=16, y=1.02)  # Adjust fontsize and y as needed
 
 plt.tight_layout()
 plt.savefig(cur + '\\res\\imp_sampling_quasi_monte_carlo.eps')

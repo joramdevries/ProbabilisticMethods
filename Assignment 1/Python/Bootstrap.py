@@ -37,7 +37,7 @@ def bootstrap_function(WindData, Nbootstrap, plots):
     #BootstrapSize = len(U)
     #BootstrapMeans = np.mean(U)
     
-    alpha =  1 - 0.95# Corresponding to 95% probability  ( alpha = 1-p)
+    alpha =  1 - 0.95#  ( alpha = 1-p)
     
     N1year = int(1*365*24*6) # taking an interval for 1 year with 365 days with 24 hours with 6 times 10 minute intervals
     
@@ -502,6 +502,7 @@ if __name__ == "__main__":
     ax2.set_xticks([1,2])
     ax2.set_xticklabels(['Normal dist.','Bootstrapping'])
     ax2.set_ylabel('Annual mean wind speed [m/s]')
+    plt.savefig(cur + '\\res\\difference_in_CI.eps')
     plt.show()
      
      
