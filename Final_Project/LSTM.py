@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Nov 13 14:29:54 2023
+Created on Mon Nov 13 14:54:37 2023
 
 @author: joram
 """
@@ -46,10 +46,9 @@ def data_import():
     LiDAR_Data['Year'] = LiDAR_Data['TimeStamp'].dt.year
     
     print("Original Data has length of ", len(LiDAR_Data))
-
+    
     return LiDAR_Data
 
 # %% MAIN
 if __name__ == '__main__':
     data = data_import()
-    
