@@ -37,8 +37,10 @@ warnings.filterwarnings("ignore")
 
 LiDAR_Data = pd.read_csv('lidar_data_2hz.csv')
 
-LiDAR_Data['Timestamp'] = pd.to_datetime(LiDAR_Data['Timestamp'], format='%Y%m%d%H%M')
+LiDAR_Data.drop(columns = 'Unnamed: 0', inplace = True)
 
-LiDAR_Data['Year'] = LiDAR_Data['Timestamp'].dt.year
+LiDAR_Data['TimeStamp'] = pd.to_datetime(LiDAR_Data['TimeStamp'], format='%Y-%m-%d %H:%M:%S.%f')
+
+LiDAR_Data['Year'] = LiDAR_Data['TimeStamp'].dt.year
 
 print("Original Data has length of ", len(LiDAR_Data))
