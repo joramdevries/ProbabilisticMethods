@@ -51,10 +51,10 @@ def data_import():
     LiDAR_Data.drop(columns = 'Unnamed: 0', inplace = True)
     
     # Assuming LiDAR_Data is your DataFrame with a 'TimeStamp' column
-    LiDAR_Data['TimeStamp'] = pd.to_datetime(LiDAR_Data['TimeStamp'], format='%Y-%m-%d %H:%M:%S.%f')
+    LiDAR_Data['TimeStamp'] = pd.to_datetime(LiDAR_Data['TimeStamp'], format="%Y-%m-%d %H:%M:%S.%f")
     
     # Round the microseconds to one decimal place
-    LiDAR_Data['TimeStamp'] = LiDAR_Data['TimeStamp'].dt.round('100L')
+    # LiDAR_Data['TimeStamp'] = LiDAR_Data['TimeStamp'].dt.round('100L')
     
     LiDAR_Data['Year'] = LiDAR_Data['TimeStamp'].dt.year
     
@@ -63,7 +63,13 @@ def data_import():
     
     print("Original Data has length of ", len(LiDAR_Data))
     
-    return LiDAR_Data
+    print(LiDAR_Data.tail)
+    
+    data = LiDAR_Data.dropna()
+    
+    print(data.tail)
+    
+    return data
 
 def LSTM(data):
 
@@ -73,6 +79,7 @@ def LSTM(data):
     
     # Find the last non-null timestamp
     end = data.index[-1]
+    print(data.tail)
     while pd.isna(end):
         print("not working")
         data = data[:-1]
@@ -84,10 +91,6 @@ def LSTM(data):
                                         freq='0.500000min').difference(data.index)
     
     print('Missing time stamps ', missing_time_stamps)
-    
-    sampling_rate = '0.500000min' # we have 0.500000min resolution in our dataset
-    #data_cont = data.resample(sampling_rate).asfreq()
-    #data_cont.loc[missing_time_stamps]
     
     data.Wsp_44m.plot(subplots=True, figsize=(20,10), grid=True)
     plt.show()
