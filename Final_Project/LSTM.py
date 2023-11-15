@@ -56,7 +56,7 @@ def data_import():
     # Round the microseconds to one decimal place
     # LiDAR_Data['TimeStamp'] = LiDAR_Data['TimeStamp'].dt.round('100L')
     
-    LiDAR_Data['Year'] = LiDAR_Data['TimeStamp'].dt.year
+    #LiDAR_Data['Year'] = LiDAR_Data['TimeStamp'].dt.year
     
     LiDAR_Data.set_index('TimeStamp', inplace=True)
     LiDAR_Data.sort_index(inplace=True)
