@@ -33,6 +33,10 @@ import tensorflow.keras.backend as K
 # Use Tensorboard for network visualization & debugging
 from tensorflow.keras.callbacks import TensorBoard
 
+from keras.optimizers import Adam
+from keras.callbacks import EarlyStopping, LearningRateScheduler
+from keras.layers import BatchNormalization, Dropout
+
 
 # %% CUR
 cur = os.getcwd()
@@ -71,7 +75,7 @@ def data_import():
     
     return data
 
-def LSTM(data):
+def LSTM(data, output):
 
     print('Null values: ', data.isnull().sum())
     
@@ -98,9 +102,11 @@ def LSTM(data):
     
     # Choose the input and output features from the main dataframe
     # Note that the index is a datetime object - you might consider converting the dataframe to arrays using df.values
+    loads = np.zeros(len(data['Wsp_44m']))
+    data['Loads'] = loads
     
-    X = data[['W4_Vlos1_orig', 'W4_Vlos2_orig']].values
-    Y = data[['Wsp_44m']].values
+    X = data[['Wsp_44m', 'Wdir_41m']].values
+    Y = data[[output]].values
     
     print(X.shape)
     print(Y.shape)
@@ -126,7 +132,7 @@ def LSTM(data):
     # test output vector
     Y_test = Y[validation_int:,:]
     
-    scaler = MinMaxScaler(feature_range=(0,1))
+    scaler = MinMaxScaler(feature_range=(-1, 1))
     X_train_scaled = scaler.fit_transform(X_train)
     X_validation_scaled = scaler.transform(X_validation)
     X_test_scaled = scaler.transform(X_test)
@@ -138,43 +144,67 @@ def LSTM(data):
     
 
     # create model - feel free to change the number of neurons per layer
-    model = Sequential()
-    model.add(Dense(50, 
-                    input_dim=X_train_scaled.shape[1], 
-                    kernel_initializer='random_uniform',
-                    bias_initializer='zeros',
-                    activation='relu'))
-    model.add(Dense(10, activation='relu'))
-    model.add(Dense(1, activation='sigmoid'))
-    model.summary()
+    #model = Sequential()
+    #model.add(Dense(50, 
+    #                input_dim=X_train_scaled.shape[1], 
+    #                kernel_initializer='he_normal',#random_uniform
+    #                bias_initializer='zeros',
+    #                activation='relu'))
+    #model.add(Dense(10, activation='relu'))
+    #model.add(Dense(1, activation='linear'))
+    #model.summary()
     
-    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy'])
+    # Create a new model with increased complexity
+    model = Sequential()
+    model.add(Dense(100, input_dim=X_train_scaled.shape[1], kernel_initializer='random_uniform', bias_initializer='zeros', activation='relu'))
+    model.add(Dense(50, activation='relu'))
+    model.add(Dense(25, activation='relu'))
+    model.add(Dense(1, activation='linear'))  # Linear activation for regression
+    
+    model.summary()
+        
+    def lr_schedule(epoch):
+        return 0.001 * 0.9 ** epoch
+
+    # Adjust the learning rate as needed
+    custom_optimizer = Adam(learning_rate=0.001)
+    model.compile(loss='mean_squared_error', optimizer=custom_optimizer)
+    
+    lr_scheduler = LearningRateScheduler(lr_schedule)
+    early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+    
+    # Add batch normalization and dropout layers as needed
+    #model.add(BatchNormalization())
+    model.add(Dropout(0.5))
+    
+    #model.compile(loss='mean_squared_error', optimizer='adam')
+    #model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy'])
     
     now = datetime.now().strftime("%Y%m%d_%H%M")
     
-    model_plot_thingie = False
+    model_plot_thingie = True
     if model_plot_thingie:
         # Watch for / or \ while creating a directory --> depending on the OS
         tbGraph = TensorBoard(log_dir=f'.\Graph\{now}',
                               histogram_freq=64, write_graph=True, write_images=True)
         
         history = model.fit(X_train_scaled, Y_train, 
-                  epochs=30, 
-                  batch_size=32,
-                  verbose=2,
-                  validation_data=(X_validation_scaled, Y_validation),
-                  callbacks=[tbGraph])
-        
+                            epochs=100,  # Increase the number of epochs
+                            batch_size=16,
+                            verbose=2,
+                            validation_data=(X_validation_scaled, Y_validation),
+                            callbacks=[tbGraph, early_stopping, lr_scheduler])
+                
         ### plot history
         plt.plot(history.history['loss'], label='train')
         plt.plot(history.history['val_loss'], label='validation')
         plt.legend()
         plt.show()
         
-        plt.plot(history.history['binary_accuracy'], label='train_accuracy')
-        plt.plot(history.history['val_binary_accuracy'], label='validation_accuracy')
-        plt.legend()
-        plt.show()
+        #plt.plot(history.history['binary_accuracy'], label='train_accuracy')
+        #plt.plot(history.history['val_binary_accuracy'], label='validation_accuracy')
+        #plt.legend()
+        #plt.show()
     
     # calculate predictions for validation dataset
     pred_val = model.predict(X_validation_scaled)
@@ -183,7 +213,7 @@ def LSTM(data):
     plt.figure()
     plt.plot(pred_val,'.', label = 'predictions')
     plt.plot(Y_validation ,'.', label = 'validation dataset') # fill in the validation dataset
-    plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
+    #plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
     plt.legend()
     plt.show()
     
@@ -194,7 +224,7 @@ def LSTM(data):
     plt.figure()
     plt.plot(pred_test,'.', label = 'predictions')
     plt.plot(Y_test ,'.', label = 'test dataset') # fill in the validation dataset
-    plt.plot(rounded_pred_test,'.', label = 'rounded predictions')
+    #plt.plot(rounded_pred_test,'.', label = 'rounded predictions')
     plt.legend()
     plt.show()
 
@@ -202,4 +232,5 @@ def LSTM(data):
 # %% MAIN
 if __name__ == '__main__':
     data = data_import()
-    LSTM(data)
+    output = 'MxA1_auto'
+    LSTM(data, output)
