@@ -168,14 +168,14 @@ def LSTM(data, output):
 
     # Adjust the learning rate as needed
     custom_optimizer = Adam(learning_rate=0.001)
-    model.compile(loss='mean_squared_error', optimizer=custom_optimizer)
+    model.compile(loss='mean_squared_error', optimizer=custom_optimizer, metrics=['binary_accuracy'])
     
     lr_scheduler = LearningRateScheduler(lr_schedule)
     early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
     
     # Add batch normalization and dropout layers as needed
-    #model.add(BatchNormalization())
-    model.add(Dropout(0.5))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.25))
     
     #model.compile(loss='mean_squared_error', optimizer='adam')
     #model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy'])
@@ -201,10 +201,10 @@ def LSTM(data, output):
         plt.legend()
         plt.show()
         
-        #plt.plot(history.history['binary_accuracy'], label='train_accuracy')
-        #plt.plot(history.history['val_binary_accuracy'], label='validation_accuracy')
-        #plt.legend()
-        #plt.show()
+        plt.plot(history.history['binary_accuracy'], label='train_accuracy')
+        plt.plot(history.history['val_binary_accuracy'], label='validation_accuracy')
+        plt.legend()
+        plt.show()
     
     # calculate predictions for validation dataset
     pred_val = model.predict(X_validation_scaled)
