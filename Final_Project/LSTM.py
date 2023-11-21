@@ -19,7 +19,7 @@ import os
 
 import openturns as ot
 
-from scipy.stats import truncnorm, qmc
+#from scipy.stats import truncnorm, qmc
 
 from datetime import datetime, timedelta
 
@@ -237,6 +237,10 @@ def LSTM_function(data, output):
     # compile the model
     model.compile(loss='mean_squared_error', optimizer='adam')
     
+    # Add batch normalization and dropout layers as needed
+    model.add(BatchNormalization())
+    model.add(Dropout(0.125))
+    
     # fit the model and store the graphs and performance to be used in TensorBoard (optional)
     now = datetime.now().strftime("%Y%m%d_%H%M")
     
@@ -244,7 +248,7 @@ def LSTM_function(data, output):
                           histogram_freq=64*2, write_graph=True, write_images=True)
     
     history = model.fit(train_X, train_Y, 
-              epochs=30,
+              epochs=100,
               batch_size=64,
               verbose=2,
               validation_data=(validation_X, validation_Y),
@@ -256,10 +260,10 @@ def LSTM_function(data, output):
     plt.legend()
     plt.show()
     
-    plt.plot(history.history['binary_accuracy'], label='train_accuracy')
-    plt.plot(history.history['val_binary_accuracy'], label='validation_accuracy')
-    plt.legend()
-    plt.show()
+    #plt.plot(history.history['binary_accuracy'], label='train_accuracy')
+    #plt.plot(history.history['val_binary_accuracy'], label='validation_accuracy')
+    #plt.legend()
+    #plt.show()
     
     
 

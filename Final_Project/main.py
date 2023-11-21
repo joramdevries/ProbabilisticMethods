@@ -101,7 +101,7 @@ if __name__ == '__main__':
     # Select model
     show_FFNN = False
     show_LSTM = False
-    show_understanding = True
+    show_understanding = False
     
     #%% MAIN LOOP
 
