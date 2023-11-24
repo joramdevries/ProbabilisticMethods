@@ -249,13 +249,13 @@ def FFNN(data, output):
     model.save('PMWE_FFNN_Model.h5')
     
     
-def FFNN_testing(data, output):
+def FFNN_testing(data, input_data, output):
     
     # Load the model
     model = load_model('PMWE_FFNN_Model.h5')
     
-    X = data[['Wsp_44m', 'Wdir_41m']].values
-    Y = data[[output]].values
+    X = data[input_data].values
+    Y = data[output].values
     
     print(X.shape)
     print(Y.shape)
@@ -287,6 +287,13 @@ def FFNN_testing(data, output):
     plt.show()
     
     
+    plt.figure()
+    plt.plot(test_actual_values_flat,test_predictions_flat)
+    plt.xlabel("Actual Values")
+    plt.ylabel("Predicted Values")
+    plt.show()
+    
+    
 # %% MAIN
 if __name__ == '__main__':
     
@@ -295,14 +302,54 @@ if __name__ == '__main__':
     training_model = False
     testing_model = True
     
+    # Select case
+    Beam_lidar_2 = False
+    Beam_lidar_4 = False
+    control = True
+    
     #%% MAIN LOOP
 
-    data = data_import()
-    output = 'MxA1_auto'
     
-    if training_model:
-        FFNN(data, output)
-    if testing_model:
-        FFNN_testing(data, output)
+    data = data_import()
+    
+    if control:
+        output = ['MxA1_auto']
+        input_data = ['Wsp_44m', 'Wdir_41m']
+        
+        if training_model:
+            FFNN(data, output)
+        if testing_model:
+            FFNN_testing(data, input_data, output)
+        
+    if Beam_lidar_2:
+        outputs = ['MxA1_auto','MxB1_auto','MxC1_auto']
+        input_data = ['W2_Vlos1_orig', 'W2_Vlos2_orig']
+        
+        if training_model:
+            
+            for output in outputs:
+                FFNN(data, output)
+                
+        if testing_model:
+            
+            for output in outputs:
+                FFNN_testing(data, input_data, output)
+                
+    if Beam_lidar_4:
+        outputs = ['MxA1_auto','MxB1_auto','MxC1_auto']
+        input_data = ['W4_Vlos1_orig', 'W4_Vlos2_orig','W4_Vlos3_orig','W4_Vlos4_orig']
+        
+        if training_model:
+            
+            for output in outputs:
+                FFNN(data, output)
+                
+        if testing_model:
+            
+            for output in outputs:
+                FFNN_testing(data, input_data, output)
+
+    
+    
 
     
