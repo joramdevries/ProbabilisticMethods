@@ -96,10 +96,44 @@ def FFNN(data, output):
 
     # print(data.loc[missing_time_stamps])
 
-    data.Wsp_44m.plot(subplots=True, figsize=(20, 10), grid=True)
-    plt.show()
 
-    print(data.columns)
+    data.Wsp_44m.plot(subplots=True, figsize=(20, 10), grid=True)
+    # plt.show()
+
+    # print(data.columns)
+
+    X0 = data[['W4_Vlos1_orig', 'W4_Vlos2_orig', 'W4_Vlos3_orig', 'W4_Vlos4_orig', 'W2_Vlos1_orig', 'W2_Vlos2_orig']]
+    Y0 = data[['MxA1_auto', 'MxB1_auto', 'MxC1_auto']]
+
+    hist_steps = 5
+    pred_steps = 3
+
+    # print("check: ", X0.index[0])
+    X = X0.copy()
+    Y = Y0.copy()
+
+
+    for j in range(1, hist_steps+1):
+        Xj = X0.copy()
+
+        times = X0.index
+        newtimes = times - j * timedelta(milliseconds=500)
+        Xj.set_index(newtimes, inplace=True)
+
+        col_names = list(X0.columns)
+        newcolumns = []
+        for i in range(len(col_names)):
+            newcolumns.append(col_names[i] + "_t-" + str(j))
+            Xj.rename(columns={col_names[i]: newcolumns[i]}, inplace=True)
+
+        X[newcolumns] = list(np.ones((len(times),len(newcolumns)))*np.nan)
+
+        X.combine_first(Xj)
+
+
+
+
+
 
     # Choose the input and output features from the main dataframe
     # Note that the index is a datetime object - you might consider converting the dataframe to arrays using df.values
