@@ -91,7 +91,7 @@ def data_import(fake_addition=False):
     # data['STD'] = rolling_std
     # data['TI'] = rolling_std / rolling_mean
     #
-    # return data
+    return data
 
 
 if __name__ == '__main__':
