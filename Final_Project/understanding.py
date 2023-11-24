@@ -181,6 +181,7 @@ def understanding(df, output):
     plt.grid(True)
     plt.show()
     
+    
 # %% MAIN
 if __name__ == '__main__':
     
