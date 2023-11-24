@@ -41,6 +41,7 @@ from tensorflow.keras.callbacks import TensorBoard
 from keras.optimizers import Adam
 from keras.callbacks import EarlyStopping, LearningRateScheduler
 from keras.layers import BatchNormalization, Dropout
+from keras.models import load_model
 
 
 # %% CUR
@@ -231,13 +232,64 @@ def FFNN(data, output):
     plt.legend()
     plt.show()
     
+    # Save the trained model
+    model.save('PMWE_FFNN_Model.h5')
+    
+    
+def FFNN_testing(data, output):
+    
+    # Load the model
+    model = load_model('PMWE_FFNN_Model.h5')
+    
+    X = data[['Wsp_44m', 'Wdir_41m']].values
+    Y = data[[output]].values
+    
+    print(X.shape)
+    print(Y.shape)
+    
+    #train_int = int(0.6*len(data)) # 60% of the data length for training
+    validation_int = int(0.8*len(data)) # 20% more for validation
+    
+    # test input vector
+    X_test = X[validation_int:,:]
+    
+    # test output vector
+    Y_test = Y[validation_int:,:]
+    
+    # Generate predictions on the test set
+    test_predictions = model.predict(X_test)
+    
+    # Flatten the predictions and actual values
+    test_predictions_flat = test_predictions.flatten()
+    test_actual_values_flat = Y_test.flatten()
+    
+    # Calculate residuals
+    test_residuals = test_actual_values_flat - test_predictions_flat
+    
+    # Create Q-Q plot using the residuals
+    import statsmodels.api as sm
+    
+    sm.qqplot(test_residuals, line='s')
+    plt.title("Q-Q Plot of Test Set Residuals")
+    plt.show()
+    
     
 # %% MAIN
 if __name__ == '__main__':
+    
+    #%% CONTROL
+    
+    training_model = False
+    testing_model = True
     
     #%% MAIN LOOP
 
     data = data_import()
     output = 'MxA1_auto'
+    
+    if training_model:
+        FFNN(data, output)
+    if testing_model:
+        FFNN_testing(data, output)
 
-    FFNN(data, output)
+    
