@@ -228,7 +228,11 @@ def LSTM_function(data, output):
     model.add(Activation('relu'))
     
     # Second LSTM layer
+    #model.add(LSTM(50, activation='relu', return_sequences=True))
     model.add(LSTM(10, activation='relu'))
+    
+    # Third LSTM layer
+    #model.add(LSTM(25, activation='relu'))
     
     # Output Layer
     model.add(Dense(1, activation='linear'))
