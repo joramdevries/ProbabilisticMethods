@@ -91,8 +91,14 @@ def data_import():
 
 def data_info_plotting(df, output):
     
+    # Assuming df is your DataFrame
+    df['Mean WS'] = pd.to_numeric(df['Mean WS'], errors='coerce')
+    df['ActPow'] = pd.to_numeric(df['ActPow'], errors='coerce')
+    
+    df = df.dropna(subset=['Mean WS', 'ActPow'])
+    
     plt.figure()
-    plt.plot(df['Mean WS'],df['ActPow'], label="Power")
+    plt.scatter(df['Mean WS'], df['ActPow'], marker='.', label="Power")
     plt.legend()
     plt.show()
     

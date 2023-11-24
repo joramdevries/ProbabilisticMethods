@@ -40,6 +40,8 @@ from keras.optimizers import Adam
 from keras.callbacks import EarlyStopping, LearningRateScheduler
 from keras.layers import BatchNormalization, Dropout
 
+from keras.models import load_model
+
 import LSTM as LM
 import FFNN as FM
 import understanding as UM
@@ -100,21 +102,31 @@ if __name__ == '__main__':
     # %% CONTROL BOARD
     
     # Select model
-    show_FFNN = False
-    show_LSTM = False
-    show_understanding = True
+    train_FFNN = False
+    train_LSTM = False
+    show_understanding = False
     show_data_info = False
+    
+    test_FFNN = True
+    test_LSTM = True
     
     #%% MAIN LOOP
 
     data = data_import()
     output = 'MxA1_auto'
-    if show_FFNN:
+    if train_FFNN:
         FM.FFNN(data, output)
-    if show_LSTM:
+    if train_LSTM:
         LM.LSTM_function(data, output)
     if show_understanding:
         UM.understanding(data, output)
     if show_data_info:
         DI.data_info_plotting(data, output)
+        
+    if test_FFNN:
+        FM.FFNN_testing(data, output)
+    if test_LSTM:
+        LM.LSTM_testing(data, output)
+        
+    
     
