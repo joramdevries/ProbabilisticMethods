@@ -110,8 +110,11 @@ def FFNN(data, output):
     data['Loads'] = loads
     
     X = data[['Wsp_44m', 'Wdir_41m']].values
-    Y = data[[output]].values
+    Y = data[output].values
     
+    print(Y)
+    Y = -data[output].values
+    print(Y)
     print(X.shape)
     print(Y.shape)
     
@@ -136,12 +139,14 @@ def FFNN(data, output):
     # test output vector
     Y_test = Y[validation_int:,:]
     
-    scaler = MinMaxScaler(feature_range=(-1, 1))
+    scaler = MinMaxScaler(feature_range=(0, 1))
     X_train_scaled = scaler.fit_transform(X_train)
     X_validation_scaled = scaler.transform(X_validation)
     X_test_scaled = scaler.transform(X_test)
     
     print(X_train_scaled)
+    print(X_validation_scaled)
+    print(X_test_scaled)
     
     # for multiple model creation - clear  the previous DAG
     K.clear_session() 
@@ -233,7 +238,7 @@ def FFNN(data, output):
     plt.show()
     
     # Save the trained model
-    model.save('PMWE_FFNN_Model.h5')
+    model.save('PMWE_FFNN_Model_positive.h5')
     
     
 def FFNN_testing(data, input_data, output):
@@ -286,8 +291,8 @@ if __name__ == '__main__':
     
     #%% CONTROL
     
-    training_model = False
-    testing_model = True
+    training_model = True
+    testing_model = False
     
     # Select case
     Beam_lidar_2 = False
