@@ -42,6 +42,8 @@ from keras.optimizers import Adam
 from keras.callbacks import EarlyStopping, LearningRateScheduler
 from keras.layers import BatchNormalization, Dropout
 
+import pdb
+
 # %% CUR
 cur = os.getcwd()
 
@@ -117,7 +119,7 @@ def FFNN(data, output):
         Xj = X0.copy()
 
         times = X0.index
-        newtimes = times - j * timedelta(milliseconds=500)
+        newtimes = times + j * timedelta(milliseconds=500)
         Xj.set_index(newtimes, inplace=True)
 
         col_names = list(X0.columns)
@@ -126,10 +128,26 @@ def FFNN(data, output):
             newcolumns.append(col_names[i] + "_t-" + str(j))
             Xj.rename(columns={col_names[i]: newcolumns[i]}, inplace=True)
 
-        X[newcolumns] = list(np.ones((len(times),len(newcolumns)))*np.nan)
+        X[newcolumns] = Xj
 
-        X.combine_first(Xj)
 
+    for j in range(1, pred_steps+1):
+        Yj = Y0.copy()
+
+        times = Y0.index
+        newtimes = times - j * timedelta(milliseconds=500)
+        Yj.set_index(newtimes, inplace=True)
+
+        col_names = list(Y0.columns)
+        newcolumns = []
+        for i in range(len(col_names)):
+            newcolumns.append(col_names[i] + "_t+" + str(j))
+            Yj.rename(columns={col_names[i]: newcolumns[i]}, inplace=True)
+
+        Y[newcolumns] = Yj
+
+    print('X Null values: ', X.isnull().sum())
+    print('Y Null values: ', Y.isnull().sum())
 
 
 
@@ -137,14 +155,37 @@ def FFNN(data, output):
 
     # Choose the input and output features from the main dataframe
     # Note that the index is a datetime object - you might consider converting the dataframe to arrays using df.values
-    loads = np.zeros(len(data['Wsp_44m']))
-    data['Loads'] = loads
+    # loads = np.zeros(len(data['Wsp_44m']))
+    # data['Loads'] = loads
 
 
 
-    X = data[['Wsp_44m', 'Wdir_41m']].values
-    Y = data[[output]].values
+    print("Pre-purge")
+    print(X.shape)
+    print(Y.shape)
 
+    # for i in range(len(X)):
+    #     name = X.index[i]
+    #     # print(X.iloc[i], Y.iloc[i])
+    #     if np.any(X.iloc[i]==np.nan) or np.any(Y.iloc[i]==np.nan):
+    #         X.drop(name)
+    #         Y.drop(name)
+    #         # print("Get Fucked")
+
+    X.dropna(inplace=True)
+    Y.dropna(inplace=True)
+
+    print("Mid-purge")
+    print(X.shape)
+    print(Y.shape)
+
+    diffX = X.index.difference(Y.index)
+    diffY = Y.index.difference(X.index)
+
+    X.drop(diffX, inplace=True)
+    Y.drop(diffY, inplace=True)
+
+    print("Post-purge")
     print(X.shape)
     print(Y.shape)
 
@@ -152,22 +193,22 @@ def FFNN(data, output):
     validation_int = int(0.8 * len(data))  # 20% more for validation
 
     # training input vector
-    X_train = X[:train_int, :]
+    X_train = X.values[:train_int, :]
 
     # training output vector
-    Y_train = Y[:train_int, :]
+    Y_train = Y.values[:train_int, :]
 
     # validation input vector
-    X_validation = X[train_int:validation_int, :]
+    X_validation = X.values[train_int:validation_int, :]
 
     # validation output vector
-    Y_validation = Y[train_int:validation_int, :]
+    Y_validation = Y.values[train_int:validation_int, :]
 
     # test input vector
-    X_test = X[validation_int:, :]
+    X_test = X.values[validation_int:, :]
 
     # test output vector
-    Y_test = Y[validation_int:, :]
+    Y_test = Y.values[validation_int:, :]
 
     scaler = MinMaxScaler(feature_range=(-1, 1))
     X_train_scaled = scaler.fit_transform(X_train)
@@ -194,10 +235,10 @@ def FFNN(data, output):
     model = Sequential()
     model.add(
         Dense(100, input_dim=X_train_scaled.shape[1], kernel_initializer='random_uniform', bias_initializer='zeros',
-              activation='relu'))
-    model.add(Dense(50, activation='relu'))
-    model.add(Dense(25, activation='relu'))
-    model.add(Dense(1, activation='linear'))  # Linear activation for regression
+              activation='tanh'))
+    model.add(Dense(50, activation='tanh'))
+    model.add(Dense(25, activation='tanh'))
+    model.add(Dense(len(Y_train[0]), activation='linear'))  # Linear activation for regression
 
     model.summary()
 
@@ -249,8 +290,8 @@ def FFNN(data, output):
     rounded_pred_val = [round(x[0]) for x in pred_val]
 
     plt.figure()
-    plt.plot(pred_val, '.', label='predictions')
-    plt.plot(Y_validation, '.', label='validation dataset')  # fill in the validation dataset
+    plt.plot(pred_val[:, 0], '.', label='predictions')
+    plt.plot(Y_validation[:, 0], '.', label='validation dataset')  # fill in the validation dataset
     # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
     plt.legend()
     plt.show()
@@ -260,8 +301,8 @@ def FFNN(data, output):
     rounded_pred_test = [round(x[0]) for x in pred_test]
 
     plt.figure()
-    plt.plot(pred_test, '.', label='predictions')
-    plt.plot(Y_test, '.', label='test dataset')  # fill in the validation dataset
+    plt.plot(pred_test[:, 0], '.', label='predictions')
+    plt.plot(Y_test[:, 0], '.', label='test dataset')  # fill in the validation dataset
     # plt.plot(rounded_pred_test,'.', label = 'rounded predictions')
     plt.legend()
     plt.show()
