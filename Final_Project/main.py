@@ -114,6 +114,8 @@ if __name__ == '__main__':
 
     data = data_import()
     output = 'MxA1_auto'
+    input_data = ['Wsp_44m', 'Wdir_41m']
+    
     if train_FFNN:
         FM.FFNN(data, output)
     if train_LSTM:
@@ -124,9 +126,9 @@ if __name__ == '__main__':
         DI.data_info_plotting(data, output)
         
     if test_FFNN:
-        FM.FFNN_testing(data, output)
+        FM.FFNN_testing(data, input_data, output)
     if test_LSTM:
-        LM.LSTM_testing(data, output)
+        LM.LSTM_testing(data, input_data, output)
         
     
     
