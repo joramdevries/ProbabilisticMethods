@@ -280,8 +280,8 @@ def LSTM_testing(data, input_data, output):
     # Load the model
     model = load_model('PMWE_LSTM_Model.h5')
     
-    X = data[[input_data]].values
-    Y = data[[output]].values
+    X = data[input_data].values
+    Y = data[output].values
     
     print(X.shape)
     print(Y.shape)
@@ -311,6 +311,13 @@ def LSTM_testing(data, input_data, output):
     sm.qqplot(test_residuals, line='s')
     plt.title("Q-Q Plot of Test Set Residuals")
     plt.show()
+    
+    plt.figure()
+    plt.plot(test_actual_values_flat,test_predictions_flat)
+    plt.xlabel("Actual Values")
+    plt.ylabel("Predicted Values")
+    plt.show()
+    
 
 # %% MAIN
 if __name__ == '__main__':
@@ -323,7 +330,7 @@ if __name__ == '__main__':
     # Select case
     Beam_lidar_2 = False
     Beam_lidar_4 = False
-    control = False
+    control = True
     
     #%% MAIN LOOP
 
@@ -331,7 +338,7 @@ if __name__ == '__main__':
     data = data_import()
     
     if control:
-        output = 'MxA1_auto'
+        output = ['MxA1_auto']
         input_data = ['Wsp_44m', 'Wdir_41m']
         
         if training_model:
