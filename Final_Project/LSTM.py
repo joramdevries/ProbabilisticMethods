@@ -94,7 +94,7 @@ def data_import():
 
     
     
-def LSTM_function(data, output):
+def LSTM_function(data, input_data, output, model):
     
         ### define a function that will prepare the shifting input sequences for the network
     def forecast_sequences_input(input_data,n_lag):
@@ -149,15 +149,15 @@ def LSTM_function(data, output):
     
     ### Split data into train & test 
     
-    input1 = 'Wsp_44m'
-    input2 = 'Wdir_41m'
+    #input1 = 'Wsp_44m'
+    #input2 = 'Wdir_41m'
 
     train_int = int(0.6*len(data)) # 60% of the data length for training
     validation_int = int(0.8*len(data)) # 20% more for validation
     
     Y = data[output]
     # training input vector
-    X_train = data[[input1, input2]][:train_int]
+    X_train = data[input_data][:train_int]
     X_train = forecast_sequences_input(X_train,n_lag)
     
     # training output vector
@@ -165,7 +165,7 @@ def LSTM_function(data, output):
     Y_train = forecast_sequences_output(Y_train, n_out)
     
     # validation input vector
-    X_validation = data[[input1, input2]][train_int:validation_int]
+    X_validation = data[input_data][train_int:validation_int]
     X_validation = forecast_sequences_input(X_validation,n_lag)
     
     # validation output vector
@@ -173,7 +173,7 @@ def LSTM_function(data, output):
     Y_validation = forecast_sequences_output(Y_validation, n_out)
     
     # test input vector
-    X_test = data[[input1, input2]][validation_int:]
+    X_test = data[input_data][validation_int:]
     X_test = forecast_sequences_input(X_test,n_lag)
     
     # test output vector
@@ -238,7 +238,7 @@ def LSTM_function(data, output):
     #model.add(LSTM(25, activation='relu'))
     
     # Output Layer
-    model.add(Dense(1, activation='linear'))
+    model.add(Dense(len(output), activation='linear'))
     model.summary()
     
     # compile the model
@@ -273,13 +273,13 @@ def LSTM_function(data, output):
     #plt.show()
     
     # Save the trained model
-    model.save('PMWE_LSTM_Model.h5')
+    model.save(f'PMWE_LSTM_Model_{model}_{output}.h5')
     
     
-def LSTM_testing(data, input_data, output):
+def LSTM_testing(data, input_data, output, model):
     
     # Load the model
-    model = load_model('PMWE_LSTM_Model.h5')
+    model = load_model(f'PMWE_LSTM_Model_{model}_{output}.h5')
     
     X = data[input_data].values
     Y = data[output].values
@@ -331,9 +331,9 @@ if __name__ == '__main__':
     testing_model = False
     
     # Select case
-    Beam_lidar_2 = False
+    Beam_lidar_2 = True
     Beam_lidar_4 = False
-    control = True
+    control = False
     
     #%% MAIN LOOP
 
@@ -343,38 +343,33 @@ if __name__ == '__main__':
     if control:
         output = ['MxA1_auto']
         input_data = ['Wsp_44m', 'Wdir_41m']
+        model = "control"
         
         if training_model:
-            LSTM_function(data, output)
+            LSTM_function(data, input_data, output, model)
         if testing_model:
-            LSTM_testing(data, input_data, output)
+            LSTM_testing(data, input_data, output, model)
         
     if Beam_lidar_2:
         outputs = ['MxA1_auto','MxB1_auto','MxC1_auto']
         input_data = ['W2_Vlos1_orig', 'W2_Vlos2_orig']
+        model = "lidar2"
         
         if training_model:
-            
-            for output in outputs:
-                LSTM_function(data, output)
+            LSTM_function(data, input_data, outputs,model)
                 
         if testing_model:
-            
-            for output in outputs:
-                LSTM_testing(data, input_data, output)
+            LSTM_testing(data, input_data, outputs,model)
                 
     if Beam_lidar_4:
         outputs = ['MxA1_auto','MxB1_auto','MxC1_auto']
         input_data = ['W4_Vlos1_orig', 'W4_Vlos2_orig','W4_Vlos3_orig','W4_Vlos4_orig']
+        model = "lidar4"
         
         if training_model:
-            
-            for output in outputs:
-                LSTM_function(data, output)
+            LSTM_function(data, input_data, outputs,model)
                 
         if testing_model:
-            
-            for output in outputs:
-                LSTM_testing(data, input_data, output)
+            LSTM_testing(data, input_data, outputs,model)
 
 

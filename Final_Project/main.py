@@ -101,9 +101,14 @@ if __name__ == '__main__':
     
     # %% CONTROL BOARD
     
+    # Select case
+    Beam_lidar_2 = True
+    Beam_lidar_4 = True
+    control = True
+    
     # Select model
-    train_FFNN = False
-    train_LSTM = False
+    train_FFNN = True
+    train_LSTM = True
     show_understanding = False
     show_data_info = True
     
@@ -113,22 +118,57 @@ if __name__ == '__main__':
     #%% MAIN LOOP
 
     data = data_import()
-    output = 'MxA1_auto'
-    input_data = ['Wsp_44m', 'Wdir_41m']
-    
-    if train_FFNN:
-        FM.FFNN(data, output)
-    if train_LSTM:
-        LM.LSTM_function(data, output)
-    if show_understanding:
-        UM.understanding(data, output)
-    if show_data_info:
-        DI.data_info_plotting(data, output)
+    if control:
+        output = ['MxA1_auto']
+        input_data = ['Wsp_44m', 'Wdir_41m']
+        model = "control"
+    if Beam_lidar_2:
+        outputs = ['MxA1_auto','MxB1_auto','MxC1_auto']
+        input_data = ['W2_Vlos1_orig', 'W2_Vlos2_orig']
+        model = "lidar2"
+    if Beam_lidar_4:
+        outputs = ['MxA1_auto','MxB1_auto','MxC1_auto']
+        input_data = ['W4_Vlos1_orig', 'W4_Vlos2_orig','W4_Vlos3_orig','W4_Vlos4_orig']
+        model = "lidar4"
+
+    if control:
+        if train_FFNN:
+            FM.FFNN(data, input_data, output,model)
+        if train_LSTM:
+            LM.LSTM_function(data, input_data, output,model)
+        if show_understanding:
+            UM.understanding(data, output)
+        if show_data_info:
+            DI.data_info_plotting(data, output)
+            
+        if test_FFNN:
+            FM.FFNN_testing(data, input_data, output, model)
+        if test_LSTM:
+            LM.LSTM_testing(data, input_data, output, model)
         
-    if test_FFNN:
-        FM.FFNN_testing(data, input_data, output)
-    if test_LSTM:
-        LM.LSTM_testing(data, input_data, output)
+    else:
+        if train_FFNN:
+            for output in outputs:
+                FM.FFNN(data, input_data, output,model)
+        if train_LSTM:
+            for output in outputs:
+                LM.LSTM_function(data, input_data, output,model)
+        if show_understanding:
+            for output in outputs:
+                UM.understanding(data, output)
+        if show_data_info:
+            for output in outputs:
+                DI.data_info_plotting(data, output)
+            
+        if test_FFNN:
+            for output in outputs:
+                FM.FFNN_testing(data, input_data, output, model)
+        if test_LSTM:
+            for output in outputs:
+                LM.LSTM_testing(data, input_data, output, model)
         
+        
+        
+
     
     

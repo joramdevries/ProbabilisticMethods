@@ -57,7 +57,7 @@ warnings.filterwarnings("ignore")
 
 
 
-def FFNN(data, output):
+def FFNN(data, input_data, output, model):
 
     print('Null values: ', data.isnull().sum())
     # track = False
@@ -109,7 +109,7 @@ def FFNN(data, output):
     loads = np.zeros(len(data['Wsp_44m']))
     data['Loads'] = loads
     
-    X = data[['Wsp_44m', 'Wdir_41m']].values
+    X = data[input_data].values
     Y = data[output].values
     
     print(Y)
@@ -168,7 +168,7 @@ def FFNN(data, output):
     model.add(Dense(100, input_dim=X_train_scaled.shape[1], kernel_initializer='random_uniform', bias_initializer='zeros', activation='relu'))
     model.add(Dense(50, activation='relu'))
     model.add(Dense(25, activation='relu'))
-    model.add(Dense(1, activation='linear'))  # Linear activation for regression
+    model.add(Dense(len(output), activation='linear'))  # Linear activation for regression
     
     model.summary()
         
@@ -238,13 +238,13 @@ def FFNN(data, output):
     plt.show()
     
     # Save the trained model
-    model.save('PMWE_FFNN_Model_positive.h5')
+    model.save(f'PMWE_FFNN_Model_positive_{model}_{output}.h5')
     
     
-def FFNN_testing(data, input_data, output):
+def FFNN_testing(data, input_data, output, model):
     
     # Load the model
-    model = load_model('PMWE_FFNN_Model_positive.h5')
+    model = load_model(f'PMWE_FFNN_Model_positive_{model}_{output}.h5')
     
     X = data[input_data].values
     Y = data[output].values
@@ -291,8 +291,8 @@ if __name__ == '__main__':
     
     #%% CONTROL
     
-    training_model = True
-    testing_model = False
+    training_model = False
+    testing_model = True
     
     # Select case
     Beam_lidar_2 = False
@@ -307,39 +307,42 @@ if __name__ == '__main__':
     if control:
         output = ['MxA1_auto']
         input_data = ['Wsp_44m', 'Wdir_41m']
+        model = "control"
         
         if training_model:
-            FFNN(data, output)
+            FFNN(data, input_data, output, model)
         if testing_model:
-            FFNN_testing(data, input_data, output)
+            FFNN_testing(data, input_data, output, model)
         
     if Beam_lidar_2:
         outputs = ['MxA1_auto','MxB1_auto','MxC1_auto']
         input_data = ['W2_Vlos1_orig', 'W2_Vlos2_orig']
+        model = "lidar2"
         
         if training_model:
             
             for output in outputs:
-                FFNN(data, output)
+                FFNN(data, input_data, output, model)
                 
         if testing_model:
             
             for output in outputs:
-                FFNN_testing(data, input_data, output)
+                FFNN_testing(data, input_data, output, model)
                 
     if Beam_lidar_4:
         outputs = ['MxA1_auto','MxB1_auto','MxC1_auto']
         input_data = ['W4_Vlos1_orig', 'W4_Vlos2_orig','W4_Vlos3_orig','W4_Vlos4_orig']
+        model = "lidar4"
         
         if training_model:
             
             for output in outputs:
-                FFNN(data, output)
+                FFNN(data,input_data, output,model)
                 
         if testing_model:
             
             for output in outputs:
-                FFNN_testing(data, input_data, output)
+                FFNN_testing(data, input_data, output,model)
 
     
     

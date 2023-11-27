@@ -25,6 +25,8 @@ from datetime import datetime, timedelta
 
 import warnings
 
+import seaborn as sns
+
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
@@ -109,13 +111,61 @@ def data_info_plotting(df, output):
     plt.show()
     
     
+def correlation(df, output):
+    
+    print("Start correlation.....")
+    
+    # Generate a correlation matrix
+    correlation_matrix = df.corr()
+    
+    # Set up the matplotlib figure
+    plt.figure(figsize=(10, 8))
+    
+    # Create a heatmap using seaborn
+    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f")
+    
+    # Show the plot
+    plt.show()
+    
+    # Select specific columns for the pairplot
+    columns_to_plot = ["Yaw", "ROT", "Wsp_44m", "Wdir_41m", "Pitch", "Azzimuth"]
+    
+    # Create a pairplot
+    sns.pairplot(df[columns_to_plot])
+    
+    # Show the plot
+    plt.show()
+    
+    # Select specific columns for the pairplot
+    columns_to_plot_2 = ["W4_Vlos1_orig", "W4_Vlos2_orig", "W4_Vlos3_orig", "W4_Vlos4_orig", "W2_Vlos1_orig", "W2_Vlos2_orig"]
+    
+    # Create a pairplot
+    sns.pairplot(df[columns_to_plot_2])
+    
+    # Show the plot
+    plt.show()
+    
+    
+def power_plots(df, output):
+    
+    print("Power plots")
+    
 # %% MAIN
 if __name__ == '__main__':
     
     #%% MAIN LOOP
+    correlation = False
 
     data = data_import()
     output = 'MxA1_auto'
 
+    if correlation:
+        correlation(data, output)
+        
+        
     data_info_plotting(data, output)
+    power_plots(data, output)
+    
+    
+    
     
