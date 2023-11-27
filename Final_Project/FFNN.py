@@ -244,7 +244,7 @@ def FFNN(data, output):
 def FFNN_testing(data, input_data, output):
     
     # Load the model
-    model = load_model('PMWE_FFNN_Model.h5')
+    model = load_model('PMWE_FFNN_Model_positive.h5')
     
     X = data[input_data].values
     Y = data[output].values
@@ -291,8 +291,8 @@ if __name__ == '__main__':
     
     #%% CONTROL
     
-    training_model = True
-    testing_model = False
+    training_model = False
+    testing_model = True
     
     # Select case
     Beam_lidar_2 = False
