@@ -105,10 +105,10 @@ if __name__ == '__main__':
     train_FFNN = False
     train_LSTM = False
     show_understanding = False
-    show_data_info = False
+    show_data_info = True
     
-    test_FFNN = True
-    test_LSTM = True
+    test_FFNN = False
+    test_LSTM = False
     
     #%% MAIN LOOP
 
