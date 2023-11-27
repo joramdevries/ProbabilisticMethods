@@ -99,7 +99,7 @@ def FFNN(data, output):
     # print(data.loc[missing_time_stamps])
 
 
-    data.Wsp_44m.plot(subplots=True, figsize=(20, 10), grid=True)
+    # data.Wsp_44m.plot(subplots=True, figsize=(20, 10), grid=True)
     # plt.show()
 
     # print(data.columns)
@@ -291,8 +291,8 @@ def FFNN(data, output):
 
     for i in range(len(Y_validation[0])):
         plt.figure()
-        plt.scatter(pred_val[:, i], '.', label=Y.columns[i]+' predictions')
-        plt.scatter(Y_validation[:, i], '.', label='validation dataset')  # fill in the validation dataset
+        plt.plot(pred_val[:, i], '.', label=Y.columns[i]+' predictions')
+        plt.plot(Y_validation[:, i], '.', label='validation dataset')  # fill in the validation dataset
         # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
         plt.legend()
 
