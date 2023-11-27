@@ -289,22 +289,26 @@ def FFNN(data, output):
     pred_val = model.predict(X_validation_scaled)
     rounded_pred_val = [round(x[0]) for x in pred_val]
 
-    plt.figure()
-    plt.plot(pred_val[:, 0], '.', label='predictions')
-    plt.plot(Y_validation[:, 0], '.', label='validation dataset')  # fill in the validation dataset
-    # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
-    plt.legend()
+    for i in range(len(Y_validation[0])):
+        plt.figure()
+        plt.scatter(pred_val[:, i], '.', label=Y.columns[i]+' predictions')
+        plt.scatter(Y_validation[:, i], '.', label='validation dataset')  # fill in the validation dataset
+        # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
+        plt.legend()
+
     plt.show()
 
     # calculate predictions for test dataset
     pred_test = model.predict(X_test_scaled)
     rounded_pred_test = [round(x[0]) for x in pred_test]
 
-    plt.figure()
-    plt.plot(pred_test[:, 0], '.', label='predictions')
-    plt.plot(Y_test[:, 0], '.', label='test dataset')  # fill in the validation dataset
-    # plt.plot(rounded_pred_test,'.', label = 'rounded predictions')
-    plt.legend()
+    for i in range(len(Y_validation[0])):
+        plt.figure()
+        plt.scatter(pred_test[:, i], '.', label=Y.columns[i] + ' predictions')
+        plt.scatter(Y_test[:, i], '.', label='test dataset')  # fill in the validation dataset
+        # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
+        plt.legend()
+
     plt.show()
 
 
