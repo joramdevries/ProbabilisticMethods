@@ -155,12 +155,13 @@ def LSTM_function(data, output):
     train_int = int(0.6*len(data)) # 60% of the data length for training
     validation_int = int(0.8*len(data)) # 20% more for validation
     
+    Y = data[output]
     # training input vector
     X_train = data[[input1, input2]][:train_int]
     X_train = forecast_sequences_input(X_train,n_lag)
     
     # training output vector
-    Y_train = data[[output]][:train_int]
+    Y_train = Y[:train_int]
     Y_train = forecast_sequences_output(Y_train, n_out)
     
     # validation input vector
@@ -168,7 +169,7 @@ def LSTM_function(data, output):
     X_validation = forecast_sequences_input(X_validation,n_lag)
     
     # validation output vector
-    Y_validation = data[[output]][train_int:validation_int]
+    Y_validation = Y[train_int:validation_int]
     Y_validation = forecast_sequences_output(Y_validation, n_out)
     
     # test input vector
@@ -176,7 +177,7 @@ def LSTM_function(data, output):
     X_test = forecast_sequences_input(X_test,n_lag)
     
     # test output vector
-    Y_test = data[[output]][validation_int:]
+    Y_test = Y[validation_int:]
     Y_test = forecast_sequences_output(Y_test, n_out)
     
     ### scale the dataset
@@ -292,11 +293,13 @@ def LSTM_testing(data, input_data, output):
     # test input vector
     X_test = X[validation_int:,:]
     
+    X_test_reshaped = X_test.reshape((X_test.shape[0], 1, X_test.shape[1]))
+    
     # test output vector
     Y_test = Y[validation_int:,:]
     
     # Generate predictions on the test set
-    test_predictions = model.predict(X_test)
+    test_predictions = model.predict(X_test_reshaped)
     
     # Flatten the predictions and actual values
     test_predictions_flat = test_predictions.flatten()
@@ -313,7 +316,7 @@ def LSTM_testing(data, input_data, output):
     plt.show()
     
     plt.figure()
-    plt.plot(test_actual_values_flat,test_predictions_flat)
+    plt.scatter(test_actual_values_flat,test_predictions_flat, marker='.')
     plt.xlabel("Actual Values")
     plt.ylabel("Predicted Values")
     plt.show()
@@ -324,8 +327,8 @@ if __name__ == '__main__':
     
     #%% CONTROL
     
-    training_model = False
-    testing_model = True
+    training_model = True
+    testing_model = False
     
     # Select case
     Beam_lidar_2 = False

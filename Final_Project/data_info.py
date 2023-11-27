@@ -97,9 +97,15 @@ def data_info_plotting(df, output):
     
     df = df.dropna(subset=['Mean WS', 'ActPow'])
     
+    avg_power = df.groupby('Mean WS')['ActPow'].mean().reset_index()
+    
     plt.figure()
     plt.scatter(df['Mean WS'], df['ActPow'], marker='.', label="Power")
+    #plt.plot(avg_power['Mean WS'], avg_power['ActPow'], color='red', linestyle='-', linewidth=2, label='Average Power')
     plt.legend()
+    plt.xlabel('Mean WS')
+    plt.ylabel('ActPow')
+    plt.title('Scatter Plot with Average Power Curve')
     plt.show()
     
     
