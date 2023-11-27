@@ -291,8 +291,8 @@ if __name__ == '__main__':
     
     #%% CONTROL
     
-    training_model = False
-    testing_model = True
+    training_model = True
+    testing_model = False
     
     # Select case
     Beam_lidar_2 = False
