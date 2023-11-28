@@ -94,7 +94,7 @@ def data_import():
 
     
     
-def LSTM_function(data, input_data, output, model):
+def LSTM_function(data, input_data, output, model_name):
     
         ### define a function that will prepare the shifting input sequences for the network
     def forecast_sequences_input(input_data,n_lag):
@@ -203,15 +203,15 @@ def LSTM_function(data, input_data, output, model):
     K.clear_session() 
     
     ### Input reshape for LSTM problem  [samples, timesteps, features]
-    no_features = 2 # Avg and Std of wind speed
+    no_features = len(input_data) #2 # Avg and Std of wind speed
     
     train_X = X_train_scaled.reshape((X_train_scaled.shape[0], n_lag, no_features))#.astype('float32')
     train_Y = Y_train.values#.astype('float32')
     
-    validation_X = X_validation_scaled.reshape((X_validation_scaled.shape[0], n_lag, 2))#.astype('float32')
+    validation_X = X_validation_scaled.reshape((X_validation_scaled.shape[0], n_lag, no_features))#.astype('float32')
     validation_Y = Y_validation.values#.astype('float32')
     
-    test_X = X_test_scaled.reshape((X_test_scaled.shape[0], n_lag, 2))#.astype('float32')
+    test_X = X_test_scaled.reshape((X_test_scaled.shape[0], n_lag, no_features))#.astype('float32')
     test_Y = Y_test.values#.astype('float32')
     
     ### create model
@@ -228,11 +228,11 @@ def LSTM_function(data, input_data, output, model):
                    bias_initializer='zeros'))
                    
     # then we add the activation
-    model.add(Activation('relu'))
+    model.add(Activation('tanh'))
     
     # Second LSTM layer
     #model.add(LSTM(50, activation='relu', return_sequences=True))
-    model.add(LSTM(10, activation='relu'))
+    model.add(LSTM(10, activation='tanh'))
     
     # Third LSTM layer
     #model.add(LSTM(25, activation='relu'))
@@ -241,8 +241,14 @@ def LSTM_function(data, input_data, output, model):
     model.add(Dense(len(output), activation='linear'))
     model.summary()
     
+    def lr_schedule(epoch):
+        return 0.01 * 0.9 ** epoch
+    
     # compile the model
     model.compile(loss='mean_squared_error', optimizer='adam')
+    
+    lr_scheduler = LearningRateScheduler(lr_schedule)
+    early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
     
     # Add batch normalization and dropout layers as needed
     model.add(BatchNormalization())
@@ -256,15 +262,18 @@ def LSTM_function(data, input_data, output, model):
     
     history = model.fit(train_X, train_Y, 
               epochs=100,
-              batch_size=64,
+              batch_size=1024,
               verbose=2,
               validation_data=(validation_X, validation_Y),
-              callbacks=[tbGraph])
+              callbacks=[tbGraph, early_stopping, lr_scheduler])
     
     ### plot history
     plt.plot(history.history['loss'], label='train')
     plt.plot(history.history['val_loss'], label='validation')
     plt.legend()
+    
+    plt.savefig(f'Plots/PMWE_LSTM_Model_{model_name}_{output}_loss.eps')
+    plt.savefig(f'Plots/PMWE_LSTM_Model_{model_name}_{output}_loss.jpg')
     plt.show()
     
     #plt.plot(history.history['binary_accuracy'], label='train_accuracy')
@@ -273,30 +282,64 @@ def LSTM_function(data, input_data, output, model):
     #plt.show()
     
     # Save the trained model
-    model.save(f'PMWE_LSTM_Model_{model}_{output}.h5')
+    model.save(f'PMWE_LSTM_Model_{model_name}_{output}.h5')
     
     
-def LSTM_testing(data, input_data, output, model):
+def LSTM_testing(data, input_data, outputs, model_name):
     
     # Load the model
-    model = load_model(f'PMWE_LSTM_Model_{model}_{output}.h5')
+    model = load_model(f'PMWE_LSTM_Model_{model_name}_{outputs}.h5')
     
+    print("outputs:",outputs)
+    #print("output:",output)
     X = data[input_data].values
-    Y = data[output].values
+    Y = data[outputs].values
+    
+    X_data = data[input_data]
+    Y_data = data[outputs]
     
     print(X.shape)
     print(Y.shape)
     
+    train_int = int(0.6 * len(data))  # 60% of the data length for training
+    validation_int = int(0.8 * len(data))  # 20% more for validation
+
+    # training input vector
+    X_train = X[:train_int, :]
+
+    # training output vector
+    Y_train = Y[:train_int, :]
+
+    # validation input vector
+    X_validation = X[train_int:validation_int, :]
+
+    # validation output vector
+    Y_validation = Y[train_int:validation_int, :]
+
+    # test input vector
+    X_test = X[validation_int:, :]
+
+    # test output vector
+    Y_test = Y[validation_int:, :]
+
+    scaler = MinMaxScaler(feature_range=(-1, 1))
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_validation_scaled = scaler.transform(X_validation)
+    X_test_scaled = scaler.transform(X_test)
+    
+    X_validation_scaled_reshaped = X_validation_scaled.reshape((X_validation_scaled.shape[0], 1, X_validation_scaled.shape[1]))
+    
+    
     #train_int = int(0.6*len(data)) # 60% of the data length for training
-    validation_int = int(0.8*len(data)) # 20% more for validation
+    #validation_int = int(0.8*len(data)) # 20% more for validation
     
     # test input vector
-    X_test = X[validation_int:,:]
+    #X_test = X[validation_int:,:]
     
-    X_test_reshaped = X_test.reshape((X_test.shape[0], 1, X_test.shape[1]))
+    X_test_reshaped = X_test_scaled.reshape((X_test_scaled.shape[0], 1, X_test_scaled.shape[1]))
     
     # test output vector
-    Y_test = Y[validation_int:,:]
+    #Y_test = Y[validation_int:,:]
     
     # Generate predictions on the test set
     test_predictions = model.predict(X_test_reshaped)
@@ -313,27 +356,79 @@ def LSTM_testing(data, input_data, output, model):
     
     sm.qqplot(test_residuals, line='s')
     plt.title("Q-Q Plot of Test Set Residuals")
+    
+    plt.savefig(f'Plots/PMWE_LSTM_Model_{model_name}_{outputs}_QQ.eps')
+    plt.savefig(f'Plots/PMWE_LSTM_Model_{model_name}_{outputs}_QQ.jpg')
+    
     plt.show()
     
     plt.figure()
     plt.scatter(test_actual_values_flat,test_predictions_flat, marker='.')
-    plt.xlabel("Actual Values")
-    plt.ylabel("Predicted Values")
+    plt.xlabel(f"Actual Values {outputs}")
+    plt.ylabel(f"Predicted Values {outputs}")
+    
+    plt.savefig(f'Plots/PMWE_LSTM_Model_{model_name}_{outputs}_Predict_vs_Actual.eps')
+    plt.savefig(f'Plots/PMWE_LSTM_Model_{model_name}_{outputs}_Predict_vs_Actual.jpg')
+    
+    plt.show()
+    
+
+    # calculate predictions for validation dataset
+    pred_val = model.predict(X_validation_scaled_reshaped)
+    rounded_pred_val = [round(x[0]) for x in pred_val]
+
+    for i in range(len(Y_validation[0])):
+        plt.figure()
+        plt.plot(Y_validation[:, i], '.', label='validation dataset')  # fill in the validation dataset
+        plt.plot(pred_val[:, i], '.', label=Y_data.columns[i]+' predictions')
+        # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
+        
+        plt.savefig(f'Plots/PMWE_LSTM_Model_{model_name}_{Y_data.columns[i]}_validation_predictions.eps')
+        plt.savefig(f'Plots/PMWE_LSTM_Model_{model_name}_{Y_data.columns[i]}_validation_predictions.jpg')
+        
+        plt.legend()
+
+    plt.show()
+
+    # calculate predictions for test dataset
+    pred_test = model.predict(X_test_reshaped)
+    rounded_pred_test = [round(x[0]) for x in pred_test]
+
+    for i in range(len(Y_validation[0])):
+        plt.figure()
+        plt.plot(Y_test[:, i], '.', label='test dataset')  # fill in the validation dataset
+        plt.plot(pred_test[:, i], '.', label=Y_data.columns[i] + ' predictions')
+        # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
+        
+        plt.savefig(f'Plots/PMWE_LSTM_Model_{model_name}_{Y_data.columns[i]}_test_predictions.eps')
+        plt.savefig(f'Plots/PMWE_LSTM_Model_{model_name}_{Y_data.columns[i]}_test_predictions.jpg')
+        
+        plt.legend()
+
     plt.show()
     
 
 # %% MAIN
 if __name__ == '__main__':
     
+    
     #%% CONTROL
     
     training_model = True
-    testing_model = False
+    testing_model = True
     
     # Select case
-    Beam_lidar_2 = True
+    Beam_lidar_2 = False
     Beam_lidar_4 = False
     control = False
+    
+    Beam_lidar_2_plus_turbine = False
+    Beam_lidar_2_more_data = False
+    Beam_lidar_4_plus_turbine = False
+    Beam_lidar_4_more_data = False
+    
+    Beam_lidar_2_batch1024 = True
+    Beam_lidar_4_batch1024 = True
     
     #%% MAIN LOOP
 
@@ -365,6 +460,55 @@ if __name__ == '__main__':
         outputs = ['MxA1_auto','MxB1_auto','MxC1_auto']
         input_data = ['W4_Vlos1_orig', 'W4_Vlos2_orig','W4_Vlos3_orig','W4_Vlos4_orig']
         model = "lidar4"
+        
+        if training_model:
+            LSTM_function(data, input_data, outputs,model)
+                
+        if testing_model:
+            LSTM_testing(data, input_data, outputs,model)
+            
+    if Beam_lidar_2_more_data:
+        outputs = ['MxA1_auto','MxB1_auto','MxC1_auto','ActPow']
+        input_data = ['W2_Vlos1_orig', 'W2_Vlos2_orig','W2_phi','u2',
+                      'v2','U2','phi2']
+        model = "lidar2moredata"
+        
+        if training_model:
+            LSTM_function(data, input_data, outputs,model)
+                
+        if testing_model:
+            LSTM_testing(data, input_data, outputs,model)
+                
+    if Beam_lidar_4_more_data:
+        outputs = ['MxA1_auto','MxB1_auto','MxC1_auto','ActPow']
+        input_data = ['W4_Vlos1_orig', 'W4_Vlos2_orig','W4_Vlos3_orig','W4_Vlos4_orig','W4_phi','u4_top',
+                      'v4_top','U4_top','phi4_top','u4_bot','v4_bot','U4_bot','phi4_bot']
+        model = "lidar4moredata"
+        
+        if training_model:
+            LSTM_function(data, input_data, outputs,model)
+                
+        if testing_model:
+            LSTM_testing(data, input_data, outputs,model)
+            
+            
+    if Beam_lidar_2_batch1024:
+        outputs = ['MxA1_auto','MxB1_auto','MxC1_auto','ActPow']
+        input_data = ['W2_Vlos1_orig', 'W2_Vlos2_orig','W2_phi','u2',
+                      'v2','U2','phi2']
+        model = "lidar2_batch1204"
+        
+        if training_model:
+            LSTM_function(data, input_data, outputs,model)
+                
+        if testing_model:
+            LSTM_testing(data, input_data, outputs,model)
+                
+    if Beam_lidar_4_batch1024:
+        outputs = ['MxA1_auto','MxB1_auto','MxC1_auto','ActPow']
+        input_data = ['W4_Vlos1_orig', 'W4_Vlos2_orig','W4_Vlos3_orig','W4_Vlos4_orig','W4_phi','u4_top',
+                      'v4_top','U4_top','phi4_top','u4_bot','v4_bot','U4_bot','phi4_bot']
+        model = "lidar4_batch1204"
         
         if training_model:
             LSTM_function(data, input_data, outputs,model)
