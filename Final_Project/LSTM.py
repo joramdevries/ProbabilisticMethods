@@ -42,6 +42,10 @@ from keras.layers import BatchNormalization, Dropout
 
 from keras.models import load_model
 
+from sklearn.metrics import mean_absolute_error
+
+import glob
+
 
 # %% CUR
 cur = os.getcwd()
@@ -262,7 +266,7 @@ def LSTM_function(data, input_data, output, model_name):
     
     history = model.fit(train_X, train_Y, 
               epochs=100,
-              batch_size=1024,
+              batch_size=64,
               verbose=2,
               validation_data=(validation_X, validation_Y),
               callbacks=[tbGraph, early_stopping, lr_scheduler])
@@ -387,8 +391,63 @@ def LSTM_testing(data, input_data, outputs, model_name):
         plt.savefig(f'Plots/PMWE_LSTM_Model_{model_name}_{Y_data.columns[i]}_validation_predictions.jpg')
         
         plt.legend()
+        
+        plt.figure()
+        plt.scatter(Y_validation[:, i], pred_val[:, i])  # fill in the validation dataset
+        plt.xlabel(f"Validation {Y_data.columns[i]}")
+        plt.ylabel(f"Prediction {Y_data.columns[i]}")
+        # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
+        
+        plt.savefig(f'Plots/PMWE_LSTM_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_2.eps')
+        plt.savefig(f'Plots/PMWE_LSTM_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_2.jpg')
+        
+        plt.legend()
+        
+        plt.figure()
+        plt.plot(Y_validation[:, i], '.', label='validation dataset')  # fill in the validation dataset
+        plt.plot(pred_val[:, i], '.', label=Y_data.columns[i]+' predictions')
+        # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
+        plt.xlim([0,600])
+        plt.savefig(f'Plots/PMWE_LSTM_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_xlim600.eps')
+        plt.savefig(f'Plots/PMWE_LSTM_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_xlim600.jpg')
+        
+        plt.legend()
+        
+        num_offsets = 20
+        mae_values = []
+        
+        plt.figure()
+        for j in range(num_offsets):
+            offset = 2 * j
+            mae = mean_absolute_error(Y_validation[100:1000, i], pred_val[100 - offset:1000 - offset, i])
+            mae_values.append(mae)
+            print(f'MAE for offset {j}s: {mae}')
+            
+            # Plot validation dataset for each offset if j is even
+            if j % 2 == 0 and j < 14:
+                  # fill in the validation dataset
+                plt.plot(pred_val[100 - offset:1000 - offset, i], '-', label=Y_data.columns[i]+f' predictions (Offset: {j}s)')
+            
+            # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
+        plt.plot(Y_validation[100:1000, i], '.', label='validation dataset')
+        plt.xlim([100,600])
+        plt.savefig(f'Plots/PMWE_LSTM_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_xlim600_offset.eps')
+        plt.savefig(f'Plots/PMWE_LSTM_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_xlim600_offset.jpg')
+            
+        plt.legend()
 
+        #print(f'Mean Absolute Error for {Y_data.columns[i]}: {mae}')
+        
     plt.show()
+    
+    # If you want to save the MAE values for later analysis
+    mae_dict = dict(zip(range(num_offsets), mae_values))
+    
+    # Convert the dictionary to a DataFrame
+    mae_df = pd.DataFrame(list(mae_dict.items()), columns=['Offset', 'MAE'])
+    
+    # Save the DataFrame to a CSV file
+    mae_df.to_csv(f'CSV/mae_results_{model_name}.csv', index=False)
 
     # calculate predictions for test dataset
     pred_test = model.predict(X_test_reshaped)
@@ -404,6 +463,16 @@ def LSTM_testing(data, input_data, outputs, model_name):
         plt.savefig(f'Plots/PMWE_LSTM_Model_{model_name}_{Y_data.columns[i]}_test_predictions.jpg')
         
         plt.legend()
+        
+        plt.figure()
+        plt.plot(Y_test[:, i], '.', label='test dataset')  # fill in the validation dataset
+        plt.plot(pred_test[:, i], '.', label=Y_data.columns[i] + ' predictions')
+        # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
+        plt.xlim([0,600])
+        plt.savefig(f'Plots/PMWE_LSTM_Model_{model_name}_{Y_data.columns[i]}_test_predictions_xlim600.eps')
+        plt.savefig(f'Plots/PMWE_LSTM_Model_{model_name}_{Y_data.columns[i]}_test_predictions_xlim600.jpg')
+        
+        plt.legend()
 
     plt.show()
     
@@ -414,21 +483,25 @@ if __name__ == '__main__':
     
     #%% CONTROL
     
-    training_model = True
+    training_model = False
     testing_model = True
     
     # Select case
-    Beam_lidar_2 = False
-    Beam_lidar_4 = False
+    Beam_lidar_2 = True
+    Beam_lidar_4 = True
     control = False
     
     Beam_lidar_2_plus_turbine = False
-    Beam_lidar_2_more_data = False
+    Beam_lidar_2_more_data = True
     Beam_lidar_4_plus_turbine = False
-    Beam_lidar_4_more_data = False
+    Beam_lidar_4_more_data = True
     
-    Beam_lidar_2_batch1024 = True
-    Beam_lidar_4_batch1024 = True
+    Beam_lidar_2_batch1024 = False #doenst work well
+    Beam_lidar_4_batch1024 = False #doesnt work well
+    
+    
+    #Mean Absolute Error
+    mae_plot = True
     
     #%% MAIN LOOP
 
@@ -515,5 +588,30 @@ if __name__ == '__main__':
                 
         if testing_model:
             LSTM_testing(data, input_data, outputs,model)
+            
+            
+    if mae_plot:
+        
+        # Assume you have CSV files named 'mae_results_model1.csv', 'mae_results_model2.csv', etc.
+        csv_files = glob.glob('CSV/mae_results_*.csv')  # Modify the pattern based on your filenames
+        
+        plt.figure()
+        
+        for csv_file in csv_files:
+            # Read the CSV file into a DataFrame
+            mae_df = pd.read_csv(csv_file)
+        
+            # Extract model name from the CSV filename
+            model_name = csv_file.replace('mae_results_', '').replace('.csv', '')
+        
+            # Plot MAE against offsets for each model
+            plt.plot(mae_df['Offset'], mae_df['MAE'], marker='o', label=model_name)
+        
+        plt.title('MAE vs Offsets for Different Models')
+        plt.xlabel('Offset')
+        plt.ylabel('Mean Absolute Error')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
 
 
