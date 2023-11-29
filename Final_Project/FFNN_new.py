@@ -98,58 +98,7 @@ def data_import():
 
     
     
-def LSTM_function(data, input_data, output, model_name):
-    
-        ### define a function that will prepare the shifting input sequences for the network
-    def forecast_sequences_input(input_data,n_lag):
-        """
-        A function that will split the input time series to sequences for nowcast/forecast problems
-        Arguments:
-            input_data: Time series of input observations as a list, NumPy array or pandas series
-            n_lag: number of previous time steps to use for training, a.k.a. time-lag        
-        Returns:
-            Pandas DataFrame of series framed for supervised learning.
-        """
-        n_vars = input_data.shape[1] 
-        df = pd.DataFrame(input_data)
-        cols, names = list(), list()
-        # input sequence (t-n, ... t-1)
-        for i in range(n_lag, 0, -1):
-            cols.append(df.shift(i))
-            names += [('var%d(t-%d)' % (j+1, i)) for j in range(n_vars)]
-        # put it all together (aggregate)
-        agg = pd.concat(cols, axis=1)
-        agg.columns = names
-        return agg
-
-
-    ### define a function that will prepare the shifting output sequences of the network
-    def forecast_sequences_output(output_data,n_out):
-        """
-        A function that will split the output time series to sequences for nowcast/forecast problems
-        Arguments:
-            output_data: Time series of input observations as a list, NumPy array or pandas series
-            n_out: forecast horizon (for multi-output forecast)
-        Returns:
-            Pandas DataFrame of series framed for supervised learning.
-        """
-        n_vars = output_data.shape[1] 
-        df = pd.DataFrame(output_data)
-        cols, names = list(), list()
-        # forecast sequence (t, t+1, ... t+n)
-        for i in range(0, n_out):
-            cols.append(df.shift(-i))
-            if i == 0:
-                names += [('var%d(t)' % (j+1)) for j in range(n_vars)]
-            else:
-                names += [('var%d(t+%d)' % (j+1, i)) for j in range(n_vars)]
-        # put it all together (aggregate)
-        agg = pd.concat(cols, axis=1)
-        agg.columns = names    
-        return agg
-    
-    n_lag = 6 # number of previous time steps to use for training, a.k.a. time-lag
-    n_out = 1  # forecast horizon [s] 
+def FFNN_function(data, input_data, output, model_name):
     
     ### Split data into train & test 
     
@@ -159,34 +108,28 @@ def LSTM_function(data, input_data, output, model_name):
     train_int = int(0.6*len(data)) # 60% of the data length for training
     validation_int = int(0.8*len(data)) # 20% more for validation
     
-    Y = data[output]
+    X = data[input_data].values
+    Y = data[output].values
+    
     # training input vector
-    X_train = data[input_data][:train_int]
-    X_train = forecast_sequences_input(X_train,n_lag)
+    X_train = X[:train_int,:]
     
     # training output vector
-    Y_train = Y[:train_int]
-    Y_train = forecast_sequences_output(Y_train, n_out)
+    Y_train = Y[:train_int,:]        
     
     # validation input vector
-    X_validation = data[input_data][train_int:validation_int]
-    X_validation = forecast_sequences_input(X_validation,n_lag)
+    X_validation = X[train_int:validation_int,:]
     
     # validation output vector
-    Y_validation = Y[train_int:validation_int]
-    Y_validation = forecast_sequences_output(Y_validation, n_out)
+    Y_validation = Y[train_int:validation_int,:]
     
     # test input vector
-    X_test = data[input_data][validation_int:]
-    X_test = forecast_sequences_input(X_test,n_lag)
+    X_test = X[validation_int:,:]
     
     # test output vector
-    Y_test = Y[validation_int:]
-    Y_test = forecast_sequences_output(Y_test, n_out)
+    Y_test = Y[validation_int:,:]
     
-    ### scale the dataset
-    scaler = MinMaxScaler(feature_range=(-1, 1))
-    
+    scaler = MinMaxScaler(feature_range=(0, 1))
     X_train_scaled = scaler.fit_transform(X_train)
     X_validation_scaled = scaler.transform(X_validation)
     X_test_scaled = scaler.transform(X_test)
@@ -258,7 +201,7 @@ def LSTM_function(data, input_data, output, model_name):
     model.save(f'PMWE_FFNN_Model_{model_name}_{output}.h5')
     
     
-def LSTM_testing(data, input_data, outputs, model_name):
+def FFNN_testing(data, input_data, outputs, model_name):
     
     # Load the model
     model = load_model(f'PMWE_FFNN_Model_{model_name}_{outputs}.h5')
@@ -483,9 +426,9 @@ if __name__ == '__main__':
         model = "control"
         
         if training_model:
-            LSTM_function(data, input_data, output, model)
+            FFNN_function(data, input_data, output, model)
         if testing_model:
-            LSTM_testing(data, input_data, output, model)
+            FFNN_testing(data, input_data, output, model)
         
     if Beam_lidar_2:
         outputs = ['MxA1_auto','MxB1_auto','MxC1_auto']
@@ -493,10 +436,10 @@ if __name__ == '__main__':
         model = "lidar2"
         
         if training_model:
-            LSTM_function(data, input_data, outputs,model)
+            FFNN_function(data, input_data, outputs,model)
                 
         if testing_model:
-            LSTM_testing(data, input_data, outputs,model)
+            FFNN_testing(data, input_data, outputs,model)
                 
     if Beam_lidar_4:
         outputs = ['MxA1_auto','MxB1_auto','MxC1_auto']
@@ -504,10 +447,10 @@ if __name__ == '__main__':
         model = "lidar4"
         
         if training_model:
-            LSTM_function(data, input_data, outputs,model)
+            FFNN_function(data, input_data, outputs,model)
                 
         if testing_model:
-            LSTM_testing(data, input_data, outputs,model)
+            FFNN_testing(data, input_data, outputs,model)
             
     if Beam_lidar_2_more_data:
         outputs = ['MxA1_auto','MxB1_auto','MxC1_auto','ActPow']
@@ -516,10 +459,10 @@ if __name__ == '__main__':
         model = "lidar2moredata"
         
         if training_model:
-            LSTM_function(data, input_data, outputs,model)
+            FFNN_function(data, input_data, outputs,model)
                 
         if testing_model:
-            LSTM_testing(data, input_data, outputs,model)
+            FFNN_testing(data, input_data, outputs,model)
                 
     if Beam_lidar_4_more_data:
         outputs = ['MxA1_auto','MxB1_auto','MxC1_auto','ActPow']
@@ -528,10 +471,10 @@ if __name__ == '__main__':
         model = "lidar4moredata"
         
         if training_model:
-            LSTM_function(data, input_data, outputs,model)
+            FFNN_function(data, input_data, outputs,model)
                 
         if testing_model:
-            LSTM_testing(data, input_data, outputs,model)
+            FFNN_testing(data, input_data, outputs,model)
             
             
     if Beam_lidar_2_batch1024:
@@ -541,10 +484,10 @@ if __name__ == '__main__':
         model = "lidar2_batch1204"
         
         if training_model:
-            LSTM_function(data, input_data, outputs,model)
+            FFNN_function(data, input_data, outputs,model)
                 
         if testing_model:
-            LSTM_testing(data, input_data, outputs,model)
+            FFNN_testing(data, input_data, outputs,model)
                 
     if Beam_lidar_4_batch1024:
         outputs = ['MxA1_auto','MxB1_auto','MxC1_auto','ActPow']
@@ -553,10 +496,10 @@ if __name__ == '__main__':
         model = "lidar4_batch1204"
         
         if training_model:
-            LSTM_function(data, input_data, outputs,model)
+            FFNN_function(data, input_data, outputs,model)
                 
         if testing_model:
-            LSTM_testing(data, input_data, outputs,model)
+            FFNN_testing(data, input_data, outputs,model)
             
             
     if mae_plot:

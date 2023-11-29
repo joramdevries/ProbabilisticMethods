@@ -105,7 +105,7 @@ def data_import():
 
     
     
-def GRU_function(data, input_data, output, model_name):
+def GRU_LSTM_function(data, input_data, output, model_name):
     
         ### define a function that will prepare the shifting input sequences for the network
     def forecast_sequences_input(input_data,n_lag):
@@ -241,8 +241,8 @@ def GRU_function(data, input_data, output, model_name):
     # then we add the activation
     model.add(Activation('tanh'))
     
-    # Second GRU layer
-    #model.add(GRU(50, activation='relu', return_sequences=True))
+    # Second LSTM layer
+    #model.add(LSTM(50, activation='relu', return_sequences=True))
     model.add(LSTM(10, activation='tanh'))
     
     # Third GRU layer
@@ -283,8 +283,8 @@ def GRU_function(data, input_data, output, model_name):
     plt.plot(history.history['val_loss'], label='validation')
     plt.legend()
     
-    plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{output}_loss.eps')
-    plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{output}_loss.jpg')
+    plt.savefig(f'Plots/PMWE_GRU_LSTM_Mix_Model_{model_name}_{output}_loss.eps')
+    plt.savefig(f'Plots/PMWE_GRU_LSTM_Mix_Model_{model_name}_{output}_loss.jpg')
     plt.show()
     
     #plt.plot(history.history['binary_accuracy'], label='train_accuracy')
@@ -293,13 +293,13 @@ def GRU_function(data, input_data, output, model_name):
     #plt.show()
     
     # Save the trained model
-    model.save(f'PMWE_GRU_Model_{model_name}_{output}.h5')
+    model.save(f'PMWE_GRU_LSTM_Mix_Model_{model_name}_{output}.h5')
     
     
-def GRU_testing(data, input_data, outputs, model_name):
+def GRU_LSTM_Mix_testing(data, input_data, outputs, model_name):
     
     # Load the model
-    model = load_model(f'PMWE_GRU_Model_{model_name}_{outputs}.h5')
+    model = load_model(f'PMWE_GRU_LSTM_Mix_Model_{model_name}_{outputs}.h5')
     
     print("outputs:",outputs)
     #print("output:",output)
@@ -368,8 +368,8 @@ def GRU_testing(data, input_data, outputs, model_name):
     sm.qqplot(test_residuals, line='s')
     plt.title("Q-Q Plot of Test Set Residuals")
     
-    plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{outputs}_QQ.eps')
-    plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{outputs}_QQ.jpg')
+    plt.savefig(f'Plots/PMWE_GRU_LSTM_Mix_Model_{model_name}_{outputs}_QQ.eps')
+    plt.savefig(f'Plots/PMWE_GRU_LSTM_Mix_Model_{model_name}_{outputs}_QQ.jpg')
     
     plt.show()
     
@@ -378,8 +378,8 @@ def GRU_testing(data, input_data, outputs, model_name):
     plt.xlabel(f"Actual Values {outputs}")
     plt.ylabel(f"Predicted Values {outputs}")
     
-    plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{outputs}_Predict_vs_Actual.eps')
-    plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{outputs}_Predict_vs_Actual.jpg')
+    plt.savefig(f'Plots/PMWE_GRU_LSTM_Mix_Model_{model_name}_{outputs}_Predict_vs_Actual.eps')
+    plt.savefig(f'Plots/PMWE_GRU_LSTM_Mix_Model_{model_name}_{outputs}_Predict_vs_Actual.jpg')
     
     plt.show()
     
@@ -394,8 +394,8 @@ def GRU_testing(data, input_data, outputs, model_name):
         plt.plot(pred_val[:, i], '.', label=Y_data.columns[i]+' predictions')
         # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
         
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions.eps')
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions.jpg')
+        plt.savefig(f'Plots/PMWE_GRU_LSTM_Mix_Model_{model_name}_{Y_data.columns[i]}_validation_predictions.eps')
+        plt.savefig(f'Plots/PMWE_GRU_LSTM_Mix_Model_{model_name}_{Y_data.columns[i]}_validation_predictions.jpg')
         
         plt.legend()
         
@@ -405,8 +405,8 @@ def GRU_testing(data, input_data, outputs, model_name):
         plt.ylabel(f"Prediction {Y_data.columns[i]}")
         # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
         
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_2.eps')
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_2.jpg')
+        plt.savefig(f'Plots/PMWE_GRU_LSTM_Mix_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_2.eps')
+        plt.savefig(f'Plots/PMWE_GRU_LSTM_Mix_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_2.jpg')
         
         plt.legend()
         
@@ -415,8 +415,8 @@ def GRU_testing(data, input_data, outputs, model_name):
         plt.plot(pred_val[:, i], '.', label=Y_data.columns[i]+' predictions')
         # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
         plt.xlim([0,600])
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_xlim600.eps')
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_xlim600.jpg')
+        plt.savefig(f'Plots/PMWE_GRU_LSTM_Mix_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_xlim600.eps')
+        plt.savefig(f'Plots/PMWE_GRU_LSTM_Mix_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_xlim600.jpg')
         
         plt.legend()
         
@@ -438,8 +438,8 @@ def GRU_testing(data, input_data, outputs, model_name):
             # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
         plt.plot(Y_validation[100:1000, i], '.', label='validation dataset')
         plt.xlim([100,600])
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_xlim600_offset.eps')
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_xlim600_offset.jpg')
+        plt.savefig(f'Plots/PMWE_GRU_LSTM_Mix_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_xlim600_offset.eps')
+        plt.savefig(f'Plots/PMWE_GRU_LSTM_Mix_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_xlim600_offset.jpg')
             
         plt.legend()
 
@@ -454,7 +454,7 @@ def GRU_testing(data, input_data, outputs, model_name):
     mae_df = pd.DataFrame(list(mae_dict.items()), columns=['Offset', 'MAE'])
     
     # Save the DataFrame to a CSV file
-    mae_df.to_csv(f'CSV/mae_results_{model_name}_GRU.csv', index=False)
+    mae_df.to_csv(f'CSV/mae_results_{model_name}_GRU_LSTM_Mix.csv', index=False)
 
     # calculate predictions for test dataset
     pred_test = model.predict(X_test_reshaped)
@@ -466,8 +466,8 @@ def GRU_testing(data, input_data, outputs, model_name):
         plt.plot(pred_test[:, i], '.', label=Y_data.columns[i] + ' predictions')
         # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
         
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_test_predictions.eps')
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_test_predictions.jpg')
+        plt.savefig(f'Plots/PMWE_GRU_LSTM_Mix_Model_{model_name}_{Y_data.columns[i]}_test_predictions.eps')
+        plt.savefig(f'Plots/PMWE_GRU_LSTM_Mix_Model_{model_name}_{Y_data.columns[i]}_test_predictions.jpg')
         
         plt.legend()
         
@@ -476,8 +476,8 @@ def GRU_testing(data, input_data, outputs, model_name):
         plt.plot(pred_test[:, i], '.', label=Y_data.columns[i] + ' predictions')
         # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
         plt.xlim([0,600])
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_test_predictions_xlim600.eps')
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_test_predictions_xlim600.jpg')
+        plt.savefig(f'Plots/PMWE_GRU_LSTM_Mix_Model_{model_name}_{Y_data.columns[i]}_test_predictions_xlim600.eps')
+        plt.savefig(f'Plots/PMWE_GRU_LSTM_Mix_Model_{model_name}_{Y_data.columns[i]}_test_predictions_xlim600.jpg')
         
         plt.legend()
 
@@ -521,9 +521,9 @@ if __name__ == '__main__':
         model = "control"
         
         if training_model:
-            GRU_function(data, input_data, output, model)
+            GRU_LSTM_function(data, input_data, output, model)
         if testing_model:
-            GRU_testing(data, input_data, output, model)
+            GRU_LSTM_Mix_testing(data, input_data, output, model)
         
     if Beam_lidar_2:
         outputs = ['MxA1_auto','MxB1_auto','MxC1_auto']
@@ -531,10 +531,10 @@ if __name__ == '__main__':
         model = "lidar2"
         
         if training_model:
-            GRU_function(data, input_data, outputs,model)
+            GRU_LSTM_function(data, input_data, outputs,model)
                 
         if testing_model:
-            GRU_testing(data, input_data, outputs,model)
+            GRU_LSTM_Mix_testing(data, input_data, outputs,model)
                 
     if Beam_lidar_4:
         outputs = ['MxA1_auto','MxB1_auto','MxC1_auto']
@@ -542,10 +542,10 @@ if __name__ == '__main__':
         model = "lidar4"
         
         if training_model:
-            GRU_function(data, input_data, outputs,model)
+            GRU_LSTM_function(data, input_data, outputs,model)
                 
         if testing_model:
-            GRU_testing(data, input_data, outputs,model)
+            GRU_LSTM_Mix_testing(data, input_data, outputs,model)
             
     if Beam_lidar_2_more_data:
         outputs = ['MxA1_auto','MxB1_auto','MxC1_auto','ActPow']
@@ -554,10 +554,10 @@ if __name__ == '__main__':
         model = "lidar2moredata"
         
         if training_model:
-            GRU_function(data, input_data, outputs,model)
+            GRU_LSTM_function(data, input_data, outputs,model)
                 
         if testing_model:
-            GRU_testing(data, input_data, outputs,model)
+            GRU_LSTM_Mix_testing(data, input_data, outputs,model)
                 
     if Beam_lidar_4_more_data:
         outputs = ['MxA1_auto','MxB1_auto','MxC1_auto','ActPow']
@@ -566,10 +566,10 @@ if __name__ == '__main__':
         model = "lidar4moredata"
         
         if training_model:
-            GRU_function(data, input_data, outputs,model)
+            GRU_LSTM_function(data, input_data, outputs,model)
                 
         if testing_model:
-            GRU_testing(data, input_data, outputs,model)
+            GRU_LSTM_Mix_testing(data, input_data, outputs,model)
             
             
     if Beam_lidar_2_batch1024:
@@ -579,10 +579,10 @@ if __name__ == '__main__':
         model = "lidar2_batch1204"
         
         if training_model:
-            GRU_function(data, input_data, outputs,model)
+            GRU_LSTM_function(data, input_data, outputs,model)
                 
         if testing_model:
-            GRU_testing(data, input_data, outputs,model)
+            GRU_LSTM_Mix_testing(data, input_data, outputs,model)
                 
     if Beam_lidar_4_batch1024:
         outputs = ['MxA1_auto','MxB1_auto','MxC1_auto','ActPow']
@@ -591,10 +591,10 @@ if __name__ == '__main__':
         model = "lidar4_batch1204"
         
         if training_model:
-            GRU_function(data, input_data, outputs,model)
+            GRU_LSTM_function(data, input_data, outputs,model)
                 
         if testing_model:
-            GRU_testing(data, input_data, outputs,model)
+            GRU_LSTM_Mix_testing(data, input_data, outputs,model)
             
             
     if mae_plot:
