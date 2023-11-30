@@ -225,7 +225,7 @@ def LSTM_function(data, input_data, output, model_name):
     model.add(Masking(mask_value=pad_value, input_shape=(None, no_features)))
     
     # First LSTM layer
-    model.add(LSTM(50, 
+    model.add(LSTM(100, 
                    return_sequences=True,  # important to add it to ensure the following LSTM layers will have the same input shape
                    input_shape=(train_X.shape[1], train_X.shape[2]),                
                    kernel_initializer='random_uniform',
@@ -236,10 +236,16 @@ def LSTM_function(data, input_data, output, model_name):
     
     # Second LSTM layer
     #model.add(LSTM(50, activation='relu', return_sequences=True))
-    model.add(LSTM(10, activation='tanh'))
+    model.add(LSTM(50, activation='tanh', return_sequences=True))
     
     # Third LSTM layer
-    #model.add(LSTM(25, activation='relu'))
+    #model.add(LSTM(25, activation='tanh'))
+    
+    # Third LSTM layer (new layer)
+    model.add(LSTM(25, activation='tanh', return_sequences=True))
+
+    # Fourth LSTM layer (new layer)
+    model.add(LSTM(10, activation='tanh'))
     
     # Output Layer
     model.add(Dense(len(output), activation='linear'))
@@ -475,6 +481,25 @@ def LSTM_testing(data, input_data, outputs, model_name):
         plt.legend()
 
     plt.show()
+    for i in range(len(Y_validation[0])):
+        y_label_for_u = f'{Y_data.columns[i]}'
+     
+        plt.rc('font', size=14) 
+        fig2a,axs2a = plt.subplots(1,2,figsize = (16,8))
+        plt.setp(axs2a[0], title = 'Dependence vs. wind speed', xlabel = 'Mean wind speed [m/s]',ylabel = y_label_for_u)
+        plt.setp(axs2a[1], title = 'Correlation (y-y) plot', xlabel = 'Input data',ylabel = 'Model predictions')
+        axs2a[0].plot(X_test[:,0],Y_test[:, i],'o',markersize = 4,color = 'y')
+        axs2a[0].plot(X_test[:,0],pred_test[:, i],'x',markersize = 4,color = 'purple')
+        axs2a[0].legend(['Input data','Model predictions'])
+        axs2a[1].plot(Y_test[:, i],pred_test[:, i],'ok',markersize = 4)
+        axs2a[1].plot(np.array([np.min(Y_test[:, i]), np.max(Y_test[:, i])]),\
+                     np.array([np.min(Y_test[:, i]), np.max(Y_test[:, i])]),'-y',linewidth = 4)
+        axs2a[1].legend(['Point-to-point comparisons','1:1 relation'])
+        plt.tight_layout()  
+        plt.savefig(f'Plots/.Assignment1_graph_{Y_data.columns[i]}_{model_name}.eps') 
+        plt.savefig(f'Plots/.Assignment1_graph_{Y_data.columns[i]}_{model_name}.jpg')          
+        plt.show()
+        
     
 
 # %% MAIN
@@ -487,21 +512,25 @@ if __name__ == '__main__':
     testing_model = True
     
     # Select case
-    Beam_lidar_2 = True
-    Beam_lidar_4 = True
+    Beam_lidar_2 = False
+    Beam_lidar_4 = False
     control = False
     
     Beam_lidar_2_plus_turbine = False
-    Beam_lidar_2_more_data = True
+    Beam_lidar_2_more_data = False
     Beam_lidar_4_plus_turbine = False
-    Beam_lidar_4_more_data = True
+    Beam_lidar_4_more_data = False
     
     Beam_lidar_2_batch1024 = False #doenst work well
     Beam_lidar_4_batch1024 = False #doesnt work well
     
     
     #Mean Absolute Error
-    mae_plot = True
+    mae_plot = False
+    
+    
+    #Extra LSTM layer
+    layered = True
     
     #%% MAIN LOOP
 
@@ -557,6 +586,18 @@ if __name__ == '__main__':
         input_data = ['W4_Vlos1_orig', 'W4_Vlos2_orig','W4_Vlos3_orig','W4_Vlos4_orig','W4_phi','u4_top',
                       'v4_top','U4_top','phi4_top','u4_bot','v4_bot','U4_bot','phi4_bot']
         model = "lidar4moredata"
+        
+        if training_model:
+            LSTM_function(data, input_data, outputs,model)
+                
+        if testing_model:
+            LSTM_testing(data, input_data, outputs,model)
+            
+    if layered:
+        outputs = ['MxA1_auto','MxB1_auto','MxC1_auto','ActPow']
+        input_data = ['W4_Vlos1_orig', 'W4_Vlos2_orig','W4_Vlos3_orig','W4_Vlos4_orig','W4_phi','u4_top',
+                      'v4_top','U4_top','phi4_top','u4_bot','v4_bot','U4_bot','phi4_bot']
+        model = "lidar4moredata_layered"
         
         if training_model:
             LSTM_function(data, input_data, outputs,model)
