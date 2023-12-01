@@ -256,7 +256,8 @@ def GRU_function(data, input_data, output, model_name):
         return 0.01 * 0.9 ** epoch
     
     # compile the model
-    model.compile(loss='mean_squared_error', optimizer='adam')
+    #model.compile(loss='mean_squared_error', optimizer='adam')
+    model.compile(loss='mae', optimizer='adam', metrics=['mae'])
     
     lr_scheduler = LearningRateScheduler(lr_schedule)
     early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
@@ -494,21 +495,25 @@ if __name__ == '__main__':
     testing_model = True
     
     # Select case
-    Beam_lidar_2 = True
-    Beam_lidar_4 = True
+    Beam_lidar_2 = False
+    Beam_lidar_4 = False
     control = False
     
     Beam_lidar_2_plus_turbine = False
-    Beam_lidar_2_more_data = True
+    Beam_lidar_2_more_data = False
     Beam_lidar_4_plus_turbine = False
-    Beam_lidar_4_more_data = True
+    Beam_lidar_4_more_data = False
     
     Beam_lidar_2_batch1024 = False #doenst work well
     Beam_lidar_4_batch1024 = False #doesnt work well
     
     
     #Mean Absolute Error
-    mae_plot = True
+    mae_plot = False
+    
+    
+    #MSE
+    mae_run = True
     
     #%% MAIN LOOP
 
@@ -564,6 +569,18 @@ if __name__ == '__main__':
         input_data = ['W4_Vlos1_orig', 'W4_Vlos2_orig','W4_Vlos3_orig','W4_Vlos4_orig','W4_phi','u4_top',
                       'v4_top','U4_top','phi4_top','u4_bot','v4_bot','U4_bot','phi4_bot']
         model = "lidar4moredata"
+        
+        if training_model:
+            GRU_function(data, input_data, outputs,model)
+                
+        if testing_model:
+            GRU_testing(data, input_data, outputs,model)
+            
+    if mae_run:
+        outputs = ['ActPow']
+        input_data = ['W4_Vlos1_orig', 'W4_Vlos2_orig','W4_Vlos3_orig','W4_Vlos4_orig','W4_phi','u4_top',
+                      'v4_top','U4_top','phi4_top','u4_bot','v4_bot','U4_bot','phi4_bot']
+        model = "lidar4_MAE_POWER"
         
         if training_model:
             GRU_function(data, input_data, outputs,model)

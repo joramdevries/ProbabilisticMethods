@@ -225,27 +225,38 @@ def LSTM_function(data, input_data, output, model_name):
     model.add(Masking(mask_value=pad_value, input_shape=(None, no_features)))
     
     # First LSTM layer
-    model.add(LSTM(100, 
+    model.add(LSTM(50, 
                    return_sequences=True,  # important to add it to ensure the following LSTM layers will have the same input shape
                    input_shape=(train_X.shape[1], train_X.shape[2]),                
                    kernel_initializer='random_uniform',
                    bias_initializer='zeros'))
-                   
+      
+    if model_name == 'lidar4moredata_RELU_mae':
+        model.add(Activation('relu'))
+        model.add(LSTM(10, activation='relu'))
+        
+    else:
+        model.add(Activation('tanh'))
+        
+        # Second LSTM layer
+        #model.add(LSTM(50, activation='relu', return_sequences=True))
+        model.add(LSTM(10, activation='tanh'))
+             
     # then we add the activation
-    model.add(Activation('tanh'))
+    #model.add(Activation('tanh'))
     
     # Second LSTM layer
     #model.add(LSTM(50, activation='relu', return_sequences=True))
-    model.add(LSTM(50, activation='tanh', return_sequences=True))
+    #model.add(LSTM(10, activation='tanh', return_sequences=True))
     
     # Third LSTM layer
     #model.add(LSTM(25, activation='tanh'))
     
     # Third LSTM layer (new layer)
-    model.add(LSTM(25, activation='tanh', return_sequences=True))
+    #model.add(LSTM(25, activation='tanh', return_sequences=True))
 
     # Fourth LSTM layer (new layer)
-    model.add(LSTM(10, activation='tanh'))
+    #model.add(LSTM(10, activation='tanh'))
     
     # Output Layer
     model.add(Dense(len(output), activation='linear'))
@@ -530,7 +541,21 @@ if __name__ == '__main__':
     
     
     #Extra LSTM layer
-    layered = True
+    layered = False
+    
+    
+    #learning rate
+    learning_Rate =False
+    
+    
+    #relu
+    relu = False
+    
+    #only power
+    power_only = False
+    
+    #only loads
+    loads_only = True
     
     #%% MAIN LOOP
 
@@ -593,11 +618,64 @@ if __name__ == '__main__':
         if testing_model:
             LSTM_testing(data, input_data, outputs,model)
             
+    if power_only:
+        outputs = ['ActPow']
+        input_data = ['W4_Vlos1_orig', 'W4_Vlos2_orig','W4_Vlos3_orig','W4_Vlos4_orig','W4_phi','u4_top',
+                      'v4_top','U4_top','phi4_top','u4_bot','v4_bot','U4_bot','phi4_bot']
+        model = "lidar4_onlypower_tanh"
+        
+        if training_model:
+            LSTM_function(data, input_data, outputs,model)
+                
+        if testing_model:
+            LSTM_testing(data, input_data, outputs,model)
+            
+    if loads_only:
+        outputs = ['MxA1_auto','MxB1_auto','MxC1_auto']
+        input_data = ['W4_Vlos1_orig', 'W4_Vlos2_orig','W4_Vlos3_orig','W4_Vlos4_orig','W4_phi','u4_top',
+                      'v4_top','U4_top','phi4_top','u4_bot','v4_bot','U4_bot','phi4_bot']
+        model = "lidar4_onlyloads"
+        
+        if training_model:
+            LSTM_function(data, input_data, outputs,model)
+                
+        if testing_model:
+            LSTM_testing(data, input_data, outputs,model)
+            
     if layered:
         outputs = ['MxA1_auto','MxB1_auto','MxC1_auto','ActPow']
         input_data = ['W4_Vlos1_orig', 'W4_Vlos2_orig','W4_Vlos3_orig','W4_Vlos4_orig','W4_phi','u4_top',
                       'v4_top','U4_top','phi4_top','u4_bot','v4_bot','U4_bot','phi4_bot']
         model = "lidar4moredata_layered"
+        
+        if training_model:
+            LSTM_function(data, input_data, outputs,model)
+                
+        if testing_model:
+            LSTM_testing(data, input_data, outputs,model)
+            
+    if relu:
+        print(data['MxA1_auto'])
+        data['MxA1_auto'] = -data['MxA1_auto']
+        print(data['MxA1_auto'])
+        data['MxB1_auto'] = -data['MxB1_auto']
+        data['MxC1_auto'] = -data['MxC1_auto']
+        outputs = ['MxA1_auto','MxB1_auto','MxC1_auto','ActPow']
+        input_data = ['W4_Vlos1_orig', 'W4_Vlos2_orig','W4_Vlos3_orig','W4_Vlos4_orig','W4_phi','u4_top',
+                      'v4_top','U4_top','phi4_top','u4_bot','v4_bot','U4_bot','phi4_bot']
+        model = "lidar4moredata_RELU"
+        
+        if training_model:
+            LSTM_function(data, input_data, outputs,model)
+                
+        if testing_model:
+            LSTM_testing(data, input_data, outputs,model)
+            
+    if learning_Rate:
+        outputs = ['MxA1_auto','MxB1_auto','MxC1_auto','ActPow']
+        input_data = ['W4_Vlos1_orig', 'W4_Vlos2_orig','W4_Vlos3_orig','W4_Vlos4_orig','W4_phi','u4_top',
+                      'v4_top','U4_top','phi4_top','u4_bot','v4_bot','U4_bot','phi4_bot']
+        model = "lidar4moredata_learningrate"
         
         if training_model:
             LSTM_function(data, input_data, outputs,model)

@@ -487,12 +487,12 @@ if __name__ == '__main__':
     testing_model = True
     
     # Select case
-    Beam_lidar_2 = True
-    Beam_lidar_4 = True
+    Beam_lidar_2 = False
+    Beam_lidar_4 = False
     control = False
     
     Beam_lidar_2_plus_turbine = False
-    Beam_lidar_2_more_data = True
+    Beam_lidar_2_more_data = False
     Beam_lidar_4_plus_turbine = False
     Beam_lidar_4_more_data = True
     

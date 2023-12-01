@@ -173,7 +173,7 @@ def FFNN(data, input_data, output, model):
     model.summary()
         
     def lr_schedule(epoch):
-        return 0.001 * 0.9 ** epoch
+        return 0.01 * 0.9 ** epoch
 
     # Adjust the learning rate as needed
     custom_optimizer = Adam(learning_rate=0.001)
@@ -291,13 +291,13 @@ if __name__ == '__main__':
     
     #%% CONTROL
     
-    training_model = False
+    training_model = True
     testing_model = True
     
     # Select case
     Beam_lidar_2 = False
-    Beam_lidar_4 = False
-    control = True
+    Beam_lidar_4 = True
+    control = False
     
     #%% MAIN LOOP
 
