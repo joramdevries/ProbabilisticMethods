@@ -679,6 +679,16 @@ def LSTM_testing(data, input_data, outputs, model_name):
     plt.show()
     
 
+    pred_val = model.predict(X_validation_scaled_reshaped)
+    print(f"Model = {model_name}")
+    print("==========================")
+    for i in range(len(Y_validation[0])):
+        
+        Corr_coef = np.corrcoef(Y_validation[:, i], pred_val[:, i])
+        print(f"{Y_data.columns[i]} correction coefficient: ", Corr_coef)
+    print("==========================")
+    
+
 # %% MAIN
 if __name__ == '__main__':
     

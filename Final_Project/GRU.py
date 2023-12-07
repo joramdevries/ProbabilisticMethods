@@ -363,127 +363,160 @@ def GRU_testing(data, input_data, outputs, model_name):
     # Calculate residuals
     test_residuals = test_actual_values_flat - test_predictions_flat
     
-    # Create Q-Q plot using the residuals
-    import statsmodels.api as sm
+    plotss = False
     
-    sm.qqplot(test_residuals, line='s')
-    plt.title("Q-Q Plot of Test Set Residuals")
-    
-    plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{outputs}_QQ.eps')
-    plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{outputs}_QQ.jpg')
-    
-    plt.show()
-    
-    plt.figure()
-    plt.scatter(test_actual_values_flat,test_predictions_flat, marker='.')
-    plt.xlabel(f"Actual Values {outputs}")
-    plt.ylabel(f"Predicted Values {outputs}")
-    
-    plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{outputs}_Predict_vs_Actual.eps')
-    plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{outputs}_Predict_vs_Actual.jpg')
-    
-    plt.show()
-    
-
-    # calculate predictions for validation dataset
-    pred_val = model.predict(X_validation_scaled_reshaped)
-    rounded_pred_val = [round(x[0]) for x in pred_val]
-
-    for i in range(len(Y_validation[0])):
-        plt.figure()
-        plt.plot(Y_validation[:, i], '.', label='validation dataset')  # fill in the validation dataset
-        plt.plot(pred_val[:, i], '.', label=Y_data.columns[i]+' predictions')
-        # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
+    if plotss:
+        # Create Q-Q plot using the residuals
+        import statsmodels.api as sm
         
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions.eps')
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions.jpg')
+        sm.qqplot(test_residuals, line='s')
+        plt.title("Q-Q Plot of Test Set Residuals")
         
-        plt.legend()
+        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{outputs}_QQ.eps')
+        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{outputs}_QQ.jpg')
+        
+        plt.show()
         
         plt.figure()
-        plt.scatter(Y_validation[:, i], pred_val[:, i])  # fill in the validation dataset
-        plt.xlabel(f"Validation {Y_data.columns[i]}")
-        plt.ylabel(f"Prediction {Y_data.columns[i]}")
-        # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
+        plt.scatter(test_actual_values_flat,test_predictions_flat, marker='.')
+        plt.xlabel(f"Actual Values {outputs}")
+        plt.ylabel(f"Predicted Values {outputs}")
         
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_2.eps')
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_2.jpg')
+        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{outputs}_Predict_vs_Actual.eps')
+        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{outputs}_Predict_vs_Actual.jpg')
         
-        plt.legend()
+        plt.show()
         
-        plt.figure()
-        plt.plot(Y_validation[:, i], '.', label='validation dataset')  # fill in the validation dataset
-        plt.plot(pred_val[:, i], '.', label=Y_data.columns[i]+' predictions')
-        # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
-        plt.xlim([0,600])
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_xlim600.eps')
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_xlim600.jpg')
-        
-        plt.legend()
-        
-        num_offsets = 20
-        mae_values = []
-        
-        plt.figure()
-        for j in range(num_offsets):
-            offset = 2 * j
-            mae = mean_absolute_error(Y_validation[100:1000, i], pred_val[100 - offset:1000 - offset, i])
-            mae_values.append(mae)
-            print(f'MAE for offset {j}s: {mae}')
-            
-            # Plot validation dataset for each offset if j is even
-            if j % 2 == 0 and j < 14:
-                  # fill in the validation dataset
-                plt.plot(pred_val[100 - offset:1000 - offset, i], '-', label=Y_data.columns[i]+f' predictions (Offset: {j}s)')
-            
+    
+        # calculate predictions for validation dataset
+        pred_val = model.predict(X_validation_scaled_reshaped)
+        rounded_pred_val = [round(x[0]) for x in pred_val]
+    
+        for i in range(len(Y_validation[0])):
+            plt.figure()
+            plt.plot(Y_validation[:, i], '.', label='validation dataset')  # fill in the validation dataset
+            plt.plot(pred_val[:, i], '.', label=Y_data.columns[i]+' predictions')
             # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
-        plt.plot(Y_validation[100:1000, i], '.', label='validation dataset')
-        plt.xlim([100,600])
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_xlim600_offset.eps')
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_xlim600_offset.jpg')
             
-        plt.legend()
-
-        #print(f'Mean Absolute Error for {Y_data.columns[i]}: {mae}')
-        
-    plt.show()
+            plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions.eps')
+            plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions.jpg')
+            
+            plt.legend()
+            
+            plt.figure()
+            plt.scatter(Y_validation[:, i], pred_val[:, i])  # fill in the validation dataset
+            plt.xlabel(f"Validation {Y_data.columns[i]}")
+            plt.ylabel(f"Prediction {Y_data.columns[i]}")
+            # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
+            
+            plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_2.eps')
+            plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_2.jpg')
+            
+            plt.legend()
+            
+            Corr_coef = np.corrcoef(Y_validation[:, i], pred_val[:, i])
+            print(f"{Y_data.columns[i]} correction coefficient: ", Corr_coef)
+            
+            plt.figure()
+            plt.plot(Y_validation[:, i], '.', label='validation dataset')  # fill in the validation dataset
+            plt.plot(pred_val[:, i], '.', label=Y_data.columns[i]+' predictions')
+            # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
+            plt.xlim([0,600])
+            plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_xlim600.eps')
+            plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_xlim600.jpg')
+            
+            plt.legend()
+            
+            num_offsets = 20
+            mae_values = []
+            
+            plt.figure()
+            for j in range(num_offsets):
+                offset = 2 * j
+                mae = mean_absolute_error(Y_validation[100:1000, i], pred_val[100 - offset:1000 - offset, i])
+                mae_values.append(mae)
+                print(f'MAE for offset {j}s: {mae}')
+                
+                # Plot validation dataset for each offset if j is even
+                if j % 2 == 0 and j < 14:
+                      # fill in the validation dataset
+                    plt.plot(pred_val[100 - offset:1000 - offset, i], '-', label=Y_data.columns[i]+f' predictions (Offset: {j}s)')
+                
+                # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
+            plt.plot(Y_validation[100:1000, i], '.', label='validation dataset')
+            plt.xlim([100,600])
+            plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_xlim600_offset.eps')
+            plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_validation_predictions_xlim600_offset.jpg')
+                
+            plt.legend()
     
-    # If you want to save the MAE values for later analysis
-    mae_dict = dict(zip(range(num_offsets), mae_values))
+            #print(f'Mean Absolute Error for {Y_data.columns[i]}: {mae}')
+            
+        plt.show()
+        
+        # If you want to save the MAE values for later analysis
+        mae_dict = dict(zip(range(num_offsets), mae_values))
+        
+        # Convert the dictionary to a DataFrame
+        mae_df = pd.DataFrame(list(mae_dict.items()), columns=['Offset', 'MAE'])
+        
+        # Save the DataFrame to a CSV file
+        mae_df.to_csv(f'CSV/mae_results_{model_name}_GRU.csv', index=False)
     
-    # Convert the dictionary to a DataFrame
-    mae_df = pd.DataFrame(list(mae_dict.items()), columns=['Offset', 'MAE'])
+        # calculate predictions for test dataset
+        pred_test = model.predict(X_test_reshaped)
+        rounded_pred_test = [round(x[0]) for x in pred_test]
     
-    # Save the DataFrame to a CSV file
-    mae_df.to_csv(f'CSV/mae_results_{model_name}_GRU.csv', index=False)
-
-    # calculate predictions for test dataset
-    pred_test = model.predict(X_test_reshaped)
-    rounded_pred_test = [round(x[0]) for x in pred_test]
-
-    for i in range(len(Y_validation[0])):
-        plt.figure()
-        plt.plot(Y_test[:, i], '.', label='test dataset')  # fill in the validation dataset
-        plt.plot(pred_test[:, i], '.', label=Y_data.columns[i] + ' predictions')
-        # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
-        
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_test_predictions.eps')
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_test_predictions.jpg')
-        
-        plt.legend()
-        
-        plt.figure()
-        plt.plot(Y_test[:, i], '.', label='test dataset')  # fill in the validation dataset
-        plt.plot(pred_test[:, i], '.', label=Y_data.columns[i] + ' predictions')
-        # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
-        plt.xlim([0,600])
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_test_predictions_xlim600.eps')
-        plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_test_predictions_xlim600.jpg')
-        
-        plt.legend()
-
-    plt.show()
+        for i in range(len(Y_validation[0])):
+            plt.figure()
+            plt.plot(Y_test[:, i], '.', label='test dataset')  # fill in the validation dataset
+            plt.plot(pred_test[:, i], '.', label=Y_data.columns[i] + ' predictions')
+            # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
+            
+            plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_test_predictions.eps')
+            plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_test_predictions.jpg')
+            
+            plt.legend()
+            
+            plt.figure()
+            plt.plot(Y_test[:, i], '.', label='test dataset')  # fill in the validation dataset
+            plt.plot(pred_test[:, i], '.', label=Y_data.columns[i] + ' predictions')
+            # plt.plot(rounded_pred_val,'.', label = 'rounded predictions')
+            plt.xlim([0,600])
+            plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_test_predictions_xlim600.eps')
+            plt.savefig(f'Plots/PMWE_GRU_Model_{model_name}_{Y_data.columns[i]}_test_predictions_xlim600.jpg')
+            
+            plt.legend()
     
+        plt.show()
+        
+        for i in range(len(Y_validation[0])):
+            y_label_for_u = f'{Y_data.columns[i]}'
+         
+            plt.rc('font', size=14) 
+            fig2a,axs2a = plt.subplots(1,2,figsize = (16,8))
+            plt.setp(axs2a[0], title = 'Dependence vs. wind speed', xlabel = 'Mean wind speed [m/s]',ylabel = y_label_for_u)
+            plt.setp(axs2a[1], title = 'Correlation (y-y) plot', xlabel = 'Input data',ylabel = 'Model predictions')
+            axs2a[0].plot(X_test[:,0],Y_test[:, i],'o',markersize = 4,color = 'y')
+            axs2a[0].plot(X_test[:,0],pred_test[:, i],'x',markersize = 4,color = 'purple')
+            axs2a[0].legend(['Input data','Model predictions'])
+            axs2a[1].plot(Y_test[:, i],pred_test[:, i],'ok',markersize = 4)
+            axs2a[1].plot(np.array([np.min(Y_test[:, i]), np.max(Y_test[:, i])]),\
+                         np.array([np.min(Y_test[:, i]), np.max(Y_test[:, i])]),'-y',linewidth = 4)
+            axs2a[1].legend(['Point-to-point comparisons','1:1 relation'])
+            plt.tight_layout()  
+            plt.savefig(f'Plots/.Assignment1_graph_GRU_{Y_data.columns[i]}_{model_name}.eps') 
+            plt.savefig(f'Plots/.Assignment1_graph_GRU_{Y_data.columns[i]}_{model_name}.jpg')          
+            plt.show()
+    else:
+        pred_val = model.predict(X_validation_scaled_reshaped)
+        print(f"Model = {model_name}")
+        print("==========================")
+        for i in range(len(Y_validation[0])):
+            
+            Corr_coef = np.corrcoef(Y_validation[:, i], pred_val[:, i])
+            print(f"{Y_data.columns[i]} correction coefficient: ", Corr_coef)
+        print("==========================")
 
 # %% MAIN
 if __name__ == '__main__':
@@ -491,7 +524,7 @@ if __name__ == '__main__':
     
     #%% CONTROL
     
-    training_model = True
+    training_model = False
     testing_model = True
     
     # Select case
@@ -499,10 +532,10 @@ if __name__ == '__main__':
     Beam_lidar_4 = False
     control = False
     
-    Beam_lidar_2_plus_turbine = False
-    Beam_lidar_2_more_data = False
-    Beam_lidar_4_plus_turbine = False
-    Beam_lidar_4_more_data = False
+    Beam_lidar_2_plus_turbine = True
+    Beam_lidar_2_more_data = True
+    Beam_lidar_4_plus_turbine = True
+    Beam_lidar_4_more_data = True
     
     Beam_lidar_2_batch1024 = False #doenst work well
     Beam_lidar_4_batch1024 = False #doesnt work well
@@ -513,7 +546,7 @@ if __name__ == '__main__':
     
     
     #MSE
-    mae_run = True
+    mae_run = False
     
     #%% MAIN LOOP
 
@@ -569,6 +602,18 @@ if __name__ == '__main__':
         input_data = ['W4_Vlos1_orig', 'W4_Vlos2_orig','W4_Vlos3_orig','W4_Vlos4_orig','W4_phi','u4_top',
                       'v4_top','U4_top','phi4_top','u4_bot','v4_bot','U4_bot','phi4_bot']
         model = "lidar4moredata"
+        
+        if training_model:
+            GRU_function(data, input_data, outputs,model)
+                
+        if testing_model:
+            GRU_testing(data, input_data, outputs,model)
+            
+    if Beam_lidar_4_plus_turbine:
+        outputs = ['MxA1_auto','MxB1_auto','MxC1_auto','ActPow']
+        input_data = ['Wsp_44m', 'Wdir_41m','W4_Vlos1_orig', 'W4_Vlos2_orig','W4_Vlos3_orig','W4_Vlos4_orig','W4_phi','u4_top',
+                      'v4_top','U4_top','phi4_top','u4_bot','v4_bot','U4_bot','phi4_bot']
+        model = "lidar4_plus_turbine"
         
         if training_model:
             GRU_function(data, input_data, outputs,model)
